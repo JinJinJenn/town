@@ -1,8 +1,18 @@
-name: Package Town checkpoint
+name: Validate and package Town
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'index.html'
+      - 'style.css'
+      - 'package*.json'
+      - 'playwright.config.mjs'
+      - '.github/workflows/checkpoint.yml'
+      - 'CHECKPOINT.txt'
   workflow_dispatch:
 
 permissions:
@@ -13,29 +23,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  package:
+  validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Package source with a pinned offline renderer
+      - name: Install pinned dependencies
+        run: npm install --ignore-scripts
+      - name: Prepare the offline renderer
+        run: npm run vendor
+      - name: Check JavaScript and deterministic generation
+        run: |
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify rendering, controls, and mobile layout
+        run: npm run test:browser
+      - name: Package source and test evidence even when a check fails
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/town-package town-checkpoint/vendor
+          mkdir -p town-checkpoint
           git archive HEAD | tar -x -C town-checkpoint
-          cd /tmp/town-package
-          npm pack three@0.180.0 --silent
-          tar -xzf three-0.180.0.tgz
-          cp package/build/three.module.js package/build/three.core.js "$GITHUB_WORKSPACE/town-checkpoint/vendor/"
-          cp package/LICENSE "$GITHUB_WORKSPACE/town-checkpoint/vendor/THREE-LICENSE.txt"
-          cd "$GITHUB_WORKSPACE/town-checkpoint"
-          printf '%s\n' "$GITHUB_SHA" > COMMIT.txt
+          if [ -d vendor ]; then cp -r vendor town-checkpoint/; fi
+          if [ -d artifacts ]; then cp -r artifacts town-checkpoint/; fi
+          if [ -d test-results ]; then cp -r test-results town-checkpoint/; fi
+          if [ -f package-lock.json ]; then cp package-lock.json town-checkpoint/; fi
+          printf '%s\n' "$GITHUB_SHA" > town-checkpoint/COMMIT.txt
+          cd town-checkpoint
           find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: town-checkpoint
           path: town-checkpoint/
