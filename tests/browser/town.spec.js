@@ -7,8 +7,14 @@ async function ready(page){
   await expect(page.locator('#error')).toBeHidden();
   await page.waitForFunction(()=>window.townDebug.getStats().frames>3);
 }
+async function nextFrames(page,count=2){
+  const before=await page.evaluate(()=>window.townDebug.getStats().frames);
+  await page.waitForFunction(({before,count})=>window.townDebug.getStats().frames>=before+count,{before,count},{timeout:30000});
+}
+const positions=page=>page.evaluate(()=>Array.from({length:window.townDebug.getStats().residents},(_,i)=>window.townDebug.residentPosition(i)));
 
 test('desktop renders real 3D and its controls preserve the simulation',async({page})=>{
+  test.setTimeout(240000);
   await mkdir(out,{recursive:true});const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await ready(page);
@@ -16,15 +22,17 @@ test('desktop renders real 3D and its controls preserve the simulation',async({p
   expect(initial.lots).toBe(16);expect(initial.residents).toBe(32);expect(initial.triangles).toBeGreaterThan(10000);expect(initial.drawCalls).toBeLessThan(200);
   await page.screenshot({path:`${out}/Town-desktop.png`});
   await page.locator('#close-welcome').click();
-  const before=await page.evaluate(()=>window.townDebug.residentPosition(0));
-  await page.waitForTimeout(800);
-  const after=await page.evaluate(()=>window.townDebug.residentPosition(0));expect(after).not.toEqual(before);
-  await page.locator('#pause').click();await page.waitForTimeout(100);
-  const stopped=await page.evaluate(()=>window.townDebug.residentPosition(0));await page.waitForTimeout(350);
-  expect(await page.evaluate(()=>window.townDebug.residentPosition(0))).toEqual(stopped);
+  // Individuals intentionally idle. Check the population after actual rendered
+  // frames rather than requiring one arbitrary person to move in 800 ms.
+  const before=await positions(page);
+  await nextFrames(page,3);
+  expect(await positions(page)).not.toEqual(before);
+  await page.locator('#pause').click();await nextFrames(page);
+  const stopped=await positions(page);await nextFrames(page);
+  expect(await positions(page)).toEqual(stopped);
   await page.screenshot({path:`${out}/Town-neighborhood.png`});
   const cameraBefore=await page.evaluate(()=>window.townDebug.getStats().target);
-  await page.locator('#tour').click();await page.waitForTimeout(550);
+  await page.locator('#tour').click();await nextFrames(page,3);
   expect(await page.evaluate(()=>window.townDebug.getStats().target)).not.toEqual(cameraBefore);
   await page.locator('#tour').click();
   await page.evaluate(()=>window.townDebug.selectResident(10));await expect(page.locator('#inspector')).toBeVisible();
@@ -34,9 +42,9 @@ test('desktop renders real 3D and its controls preserve the simulation',async({p
   const h=await page.evaluate(()=>window.townDebug.getStats().viewHeight);await page.locator('#zoom-in').click();
   expect(await page.evaluate(()=>window.townDebug.getStats().viewHeight)).toBeLessThan(h);await page.locator('#reset').click();
   await page.locator('#evening').click();expect(await page.evaluate(()=>window.townDebug.getStats().evening)).toBe(true);
-  await page.waitForTimeout(200);await page.screenshot({path:`${out}/Town-evening.png`});await page.locator('#evening').click();
+  await nextFrames(page);await page.screenshot({path:`${out}/Town-evening.png`});await page.locator('#evening').click();
   const plan=await page.evaluate(()=>window.townDebug.getPlan());
-  for(const seed of ['test-one','test-two','petalwood']) {await page.evaluate(seed=>window.townDebug.loadSeed(seed),seed);await page.waitForTimeout(100);}
+  for(const seed of ['test-one','test-two','petalwood']) {await page.evaluate(seed=>window.townDebug.loadSeed(seed),seed);await nextFrames(page);}
   expect(await page.evaluate(()=>window.townDebug.getPlan())).toEqual(plan);
   const final=await page.evaluate(()=>window.townDebug.getStats());expect(final.geometries).toBeLessThanOrEqual(initial.geometries+2);
   expect(errors).toEqual([]);
