@@ -1,0 +1,16 @@
+{
+  "name": "jinjinjenn-town",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A procedural neighborhood visual benchmark for JinJinJenn.",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "vendor": "node tools/vendor.mjs",
+    "test": "node --test tests/plan.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": { "three": "0.180.0" },
+  "devDependencies": { "@playwright/test": "1.56.1" },
+  "engines": { "node": ">=20" }
+}
