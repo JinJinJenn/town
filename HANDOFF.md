@@ -1,23 +1,48 @@
-# Town checkpoint 00
+# Town checkpoint 01: resumable visual benchmark
 
-This is a new implementation, not recovered source from the earlier November 6 session.
+## What this is
 
-## Approved direction
+A new Three.js implementation of JinJinJenn Town. The old November 6 cloud-computer prototype was not recovered. Keep Town separate from Jenn's Cafe, Farm, and the main portfolio.
 
-Recreate the pastel isometric neighborhood reference as a finite, detailed block before adding infinite generation. Include cottages, a cafe, gardens, sidewalks, trees, and articulated residents. Use natural complete sentences for UI prose.
+The approved reference is a pastel isometric neighborhood with detailed cottages, a striped cafe awning, pale sidewalks, fenced gardens, small residents, and soft lighting. UI prose must use natural complete sentences rather than marketing fragments.
 
-## Work sequence
+## Implemented and committed
 
-1. Commit a bootable browser shell and parameterized Three.js scene.
-2. Test the rendered scene and controls, then create a source ZIP.
-3. Improve the visual benchmark and add interactions in subsequent checkpoints.
-4. Add worker-based streaming after the benchmark is solid.
-5. Introduce optional Blender assets one at a time. Blender must not block the first runnable milestone.
+- A finite 4-by-4 neighborhood with 16 lots: 13 homes, one cafe, and two parks.
+- Seeded house dimensions, materials, garden details, and resident appearance. Street topology is still a fixed grid.
+- Parametric architecture and props with shared geometries/materials, compacted into instanced batches.
+- 32 articulated residents walking block-sidewalk loops and occasionally pausing. They do not yet choose activities or enter homes.
+- Orthographic camera pan, zoom, rotation, tour, reset, resident/building selection, and resident following.
+- Afternoon/evening lighting, simulation pause, seed input, responsive interface, dismissible introduction, and links to Jenn's website.
+- Relative asset paths and a local server supporting /town/.
+- No Blender dependency or long-running asset job.
 
-## Recovery rules
+## Run it
 
-Commit working milestones, verify remote files, and update this handoff before stopping. Do not overwrite Jenn's Cafe or the main portfolio. Do not claim the previous prototype was recovered. Keep relative asset URLs for /town/. Do not force-push.
+From a Git checkout: npm install, npm run vendor, npm run dev.
+From a packaged checkpoint: node tools/serve.mjs. The archive already includes vendor/.
+Open http://127.0.0.1:4173/town/. Do not double-click index.html.
 
-## Current state
+## Validation so far
 
-Initialization only. Runtime files and browser validation are next. A live Pages deployment has not been verified.
+All six generation tests passed. The actual WebGL2 scene rendered in Chromium on the GitHub Actions runner. Desktop and mobile screenshots were inspected; the result establishes the initial visual baseline, not a pixel-perfect match to the original Blender reference.
+
+The mobile layout/control test and the unavailable-WebGL error test passed. An initial desktop motion assertion was too timing-sensitive: it required one resident to move during an arbitrary 800 ms window even though residents can idle. The test now waits for rendered frames and checks the population. Inspect the latest Validate and package Town run before declaring the full browser suite passed.
+
+The first measured desktop frame reported 20 main-render draw calls, 425470 submitted triangles, 14 static batches, and 6 dynamic batches. These are renderer counters, not all-pass GPU cost or a real-device frame-rate measurement.
+
+## Backups
+
+All runtime source was committed as it was created. GitHub Actions packages source, vendor files, screenshots when available, COMMIT.txt, and SHA256SUMS.txt even when validation fails. Action artifacts expire after 30 days; the commits and locally saved ZIPs are separate copies. Never claim a backup exists without checking its content and commit.
+
+## Known scope and visual follow-up
+
+The world is finite. No furnished interiors, cutaways, decorating, needs, relationships, cross-block pathfinding, world streaming, or editable-save format exists yet. Fine roof seams can alias at this camera distance. Shadows and material balance still need a hardware-browser art/performance pass. The current UI is HTML/CSS, while the neighborhood and residents are rendered in WebGL.
+
+The intended public address is https://jinjinjenn.github.io/town/. A successful source commit does not mean GitHub Pages is configured; public deployment has not been verified.
+
+## Next bounded checkpoint
+
+Review this build first. Refine roof seams, shadows, and character readability without rewriting the generator. Then add one furnished house with a working cutaway and a single usable interaction anchor. Verify and commit that before adding other systems.
+
+Keep Blender optional: one generator script and one time-limited export at a time, saving both source and output before another job. Do not start Blender rendering, worker streaming, and full resident AI in one uncommitted session. Do not force-push or overwrite other projects.
