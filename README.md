@@ -1,53 +1,84 @@
-# JinJinJenn Town 🏡
+# JinJinJenn Town
 
-A cozy, procedurally generated 3D neighborhood and interactive little-world experience for [JinJinJenn](https://jinjinjenn.github.io/).
+A procedural, pastel 3D neighborhood for [JinJinJenn](https://jinjinjenn.github.io/), built as a standalone project for `/town/`.
 
-**Planned site:** https://jinjinjenn.github.io/town/
+## Checkpoint 01: the visual benchmark
 
-## Vision
+This is a new implementation, not recovered source from the interrupted November 6 prototype. It starts with one finite neighborhood so the art, controls, and performance can be judged before streaming or deeper simulation is added.
 
-Explore an endlessly expanding, pastel low-poly town filled with homes, cafes, gardens, parks, and residents going about their lives. Watch the town like a screensaver, or interact: explore houses, follow residents, decorate lots, and discover Jenn's mods and games.
+The source implements 16 lots, including two parks and Jenn's Cafe; parameterized cottages and two-storey houses; layered pitched roofs, shutters, porches, fences, gardens, street furniture, and a pond bridge; and 32 varied, articulated residents who walk along the sidewalks and occasionally pause. Repeated parts are combined into instanced rendering batches.
 
-Town is a standalone project, separate from Jenn's Cafe and Farm. The website can link to it without embedding its source.
+The camera supports dragging, zooming, rotation, an optional tour, and following a selected resident. The interface includes afternoon/evening lighting, simulation pause, reproducible neighborhood seeds, and links to Jenn's main website. Prose uses complete, natural sentences rather than marketing fragments.
 
-## Technical direction
+**This is not a complete life simulator.** Streets currently use a fixed grid. Seeds vary the buildings, palettes, gardens, and residents. Residents follow sidewalk loops rather than planning activities. Furnished interiors, house cutaways, decorating, needs, relationships, district streaming, and Blender assets are not implemented in this checkpoint.
 
-- **Runtime:** Three.js with a WebGL2-first browser target; evaluate WebGPU later.
-- **World:** Deterministic seeded generation, streets first, then blocks, lots, houses, interiors, and decorations.
-- **Streaming:** Chunk-based loading/unloading with Web Workers for generation and a bounded main-thread GPU upload budget.
-- **Rendering:** Shared geometry, instancing, LODs, cozy lighting, and lightweight animated environment shaders.
-- **Residents:** Varied modular characters, articulated animations, daily activities, and scalable simulation.
-- **Art pipeline:** Blender + bpy modular asset kit, exported to browser-friendly assets with useful placement metadata.
-- **Interaction:** Isometric camera tour, free exploration, selection, cutaway houses, decorating, day/night controls.
-- **Website:** Responsive presentation and an in-game portal to Jenn's Sims 4 mods, projects, and devlog.
+## Run the packaged checkpoint ZIP
 
-These are goals, not claims about completed features.
+The GitHub Actions checkpoint archive includes `vendor/`, so no CDN or package installation is needed to run that archive.
 
-## First playable milestone
+1. Extract the whole ZIP while preserving its folders.
+2. In that folder, run `node tools/serve.mjs`.
+3. Open `http://127.0.0.1:4173/town/`.
 
-- [ ] Browser scene boots locally and from GitHub Pages.
-- [ ] One attractive generated neighborhood with streets, lots, gardens, and several house archetypes.
-- [ ] A recognizable cafe landmark.
-- [ ] Animated residents with varied appearances and simple routines.
-- [ ] Camera tour and manual exploration.
-- [ ] Basic house selection and decorating.
-- [ ] Deterministic seed and chunk streaming.
-- [ ] Mobile-friendly layout and sensible performance budgets.
+Alternatively, run `python -m http.server 4173` from the extracted folder and open `http://127.0.0.1:4173/`.
 
-## Recovery note
+Do not double-click `index.html`: browsers restrict JavaScript modules opened through `file://`. The graphics scene requires WebGL2. A clear error is shown when it cannot start; a static render is never presented as live gameplay.
 
-An earlier ChatGPT Work session on November 6, 2026 reported a prototype with generated neighborhoods, furnished houses, articulated residents, a Blender kit, decorating, and portfolio UI. That session reached its conversation limit before its source could be verified in this repository. **Do not assume the previous prototype has been recovered or committed here.** Preserve any recovered files separately and audit them before integration.
+## Run a fresh Git checkout
 
-The earlier experiments originated around `TrentSterling/jenns-cafe`; Town should remain independent.
+Use Node.js 20 or later:
 
-## Local development
+```sh
+npm install
+npm run vendor
+npm run dev
+```
 
-The runtime, build commands, and deployment workflow will be documented once source files are added. Do not assume a working build exists yet.
+`npm run vendor` copies the pinned Three.js 0.180.0 modules and license into `vendor/`. The renderer files are generated dependencies, not Blender exports. No build bundler is required.
 
-## Publishing
+## Controls
 
-GitHub Pages should deploy this repository at `/town/`. Use relative URLs or a configurable base path for all assets so it works both locally and on GitHub Pages.
+| Action | Control |
+| --- | --- |
+| Move around | Drag, WASD, or arrow keys |
+| Zoom | Scroll, pinch, or the + and - buttons |
+| Rotate | Right-drag, Q, or E |
+| Return to the starting view | R or the home button |
+| Inspect a resident or building | Select it in the scene |
+| Follow a resident | Select them, then choose Follow this resident |
+| Watch a camera tour | Tour |
+| Pause resident movement | Pause |
+| Change the lighting | Evening |
+| Reproduce a neighborhood | Open ? and enter its seed |
 
-## Attribution
+Manual camera input stops the tour or following. The welcome panel remembers dismissal when local storage is available. Simulation/rendering pauses when the tab is hidden. There is no player save format yet because this checkpoint has no editing system.
 
-Independent fan-created cozy life-simulation project. Not affiliated with Electronic Arts or Maxis.
+## Source map
+
+- `src/plan.js` produces deterministic recipes and sidewalk paths without a renderer dependency.
+- `src/kit.js` defines shared parametric geometry, architecture, props, and instancing.
+- `src/world.js` assembles the neighborhood and articulated residents.
+- `src/main.js` owns rendering, camera input, lighting, selection, and UI behavior.
+- `tools/serve.mjs` serves either the root or the `/town/` subpath for testing.
+- `tests/` contains generation invariants and browser checks.
+- `HANDOFF.md` records the checkpoint state and the next bounded task.
+
+## Validation and backups
+
+`npm test` checks seeded generation, lot dimensions, and looping sidewalk routes. To run the browser suite locally, use `npx playwright install chromium` followed by `npm run test:browser`.
+
+The GitHub Actions workflow validates the source and runs actual browser rendering and interaction checks. It saves desktop, neighborhood-only, evening, and mobile screenshots, plus test evidence and a source archive. It also packages source when a validation step fails, so a failed test does not discard the work.
+
+Each archive contains `COMMIT.txt`, `SHA256SUMS.txt`, and the dependency license. The workflow's downloadable artifacts expire after 30 days; Git commits and any ZIP you keep locally are separate copies. Always inspect the workflow result and handoff before treating a checkpoint as validated. Software-rendered screenshots do not establish real-device frame rates.
+
+## Publishing under /town/
+
+All runtime imports and assets use relative paths. The intended public URL is `https://jinjinjenn.github.io/town/`. A source commit alone does not prove Pages is enabled or the site is live. The deployed site needs `index.html`, `style.css`, `src/`, and `vendor/` together.
+
+## Next steps
+
+First review the visual benchmark against the reference and refine proportions, shadows, and character readability. Then add one furnished, usable house before expanding the simulation. Add worker-based district streaming only after those small milestones are verified.
+
+Blender remains optional. Introduce one asset generator and one time-limited export at a time, committing the script and exported result before beginning another. A Blender job must never be the only place a working neighborhood exists.
+
+Independent project; not affiliated with Electronic Arts or Maxis. Runtime geometry is generated by this project's code rather than extracted from The Sims. Third-party renderer licensing is included with packaged checkpoints.
