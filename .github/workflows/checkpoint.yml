@@ -1,0 +1,43 @@
+name: Package Town checkpoint
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: town-checkpoint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Package source with a pinned offline renderer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/town-package town-checkpoint/vendor
+          git archive HEAD | tar -x -C town-checkpoint
+          cd /tmp/town-package
+          npm pack three@0.180.0 --silent
+          tar -xzf three-0.180.0.tgz
+          cp package/build/three.module.js package/build/three.core.js "$GITHUB_WORKSPACE/town-checkpoint/vendor/"
+          cp package/LICENSE "$GITHUB_WORKSPACE/town-checkpoint/vendor/THREE-LICENSE.txt"
+          cd "$GITHUB_WORKSPACE/town-checkpoint"
+          printf '%s\n' "$GITHUB_SHA" > COMMIT.txt
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: town-checkpoint
+          path: town-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
