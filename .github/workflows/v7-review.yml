@@ -20,11 +20,12 @@ jobs:
       - name: Save integrated V7 source before testing
         run: |
           node tools/integrate-v7.mjs
+          node tools/refine-v7.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/main.js src/home.js index.html package.json package-lock.json
+          git add src/main.js src/home.js src/v7-detail.js index.html package.json package-lock.json
           if ! git diff --cached --quiet; then
-            git commit -m 'feat(v7): activate cottage-first arrival and layered detail'
+            git commit -m 'fix(v7): finalize cottage arrival and keep new details clear of existing fixtures'
             git push origin HEAD:feat/checkpoint-07-lived-in-cottage
           fi
       - name: Validate source and artwork integrity
