@@ -37,7 +37,7 @@ export function createLiveHUD(renderer,canvas,onAction){
   function portrait(r,x,y,w,h){rect(x,y,w,h,r.index===currentSelected?colors.pale:colors.button,10);const c=cells.get('@portrait:'+r.index);if(c)quad(x,y,w,h,colors.white,c);else icon('person',x+5,y+8,w-10);}
   let currentSelected=-1;
 
-  function quad(x,y,w,h,c,region=null,radius=0){if(vertices+4>limit)return;const n=vertices;vertices+=4;const coords=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],q=[[0,0],[1,0],[1,1],[0,1]];for(let i=0;i<4;i++){pos.set(coords[i],(n+i)*2);local.set(q[i],(n+i)*2);sizes.set([w,h],(n+i)*2);col.set(c,(n+i)*4);rad[n+i]=region?(region.rgb?-2:-1):radius;uv.set(region?[(region.x+q[i][0]*region.w)/1024,1-(region.y+q[i][1]*region.h)/512]:[0,0],(n+i)*2);}}
+  function quad(x,y,w,h,c,region=null,radius=0){if(![x,y,w,h].every(Number.isFinite)||vertices+4>limit)return;const n=vertices;vertices+=4;const coords=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],q=[[0,0],[1,0],[1,1],[0,1]];for(let i=0;i<4;i++){pos.set(coords[i],(n+i)*2);local.set(q[i],(n+i)*2);sizes.set([w,h],(n+i)*2);col.set(c,(n+i)*4);rad[n+i]=region?(region.rgb?-2:-1):radius;uv.set(region?[(region.x+q[i][0]*region.w)/1024,1-(region.y+q[i][1]*region.h)/512]:[0,0],(n+i)*2);}}
   const rect=(x,y,w,h,c,r=10)=>quad(x,y,w,h,c,null,r);
   function text(value,x,y,size=14,color=colors.ink){const s=size/26;for(const ch of String(value)){const c=cells.get(ch)||cells.get('?');quad(x-3*s,y-3*s,40*s,40*s,color,c);x+=(c.advance+.6)*s;}return x;}
   const icon=(name,x,y,size=26,color=colors.ink)=>quad(x,y,size,size,color,cells.get('@'+name));
@@ -46,12 +46,12 @@ export function createLiveHUD(renderer,canvas,onAction){
   function renderModel(m){
     vertices=0;hits=[];buildPortraits(m);currentSelected=m.selected.index;const phone=width<760;
     rect(12,12,phone?244:280,34,colors.panel,17);icon('diamond',22,19,20,colors.mint);text('LIVE',49,21,12,colors.mint);text(`${m.inside} at home / 32 neighbors`,89,21,phone?10:12,colors.ink);
-    for(const b of m.bubbles??[]){if(b.x<10||b.x>width-20||b.y<55||b.y>height-170)continue;rect(b.x-12,b.y-12,24,21,colors.panel,8);icon(b.icon||'chat',b.x-9,b.y-10,18,colors.mint);}
+    for(const b of m.bubbles??[]){if(!Number.isFinite(b.x)||!Number.isFinite(b.y)||b.x<10||b.x>width-20||b.y<55||b.y>height-170)continue;rect(b.x-12,b.y-12,24,21,colors.panel,8);icon(b.icon||'chat',b.x-9,b.y-10,18,colors.mint);}
     const bw=phone?width-16:680,bx=phone?8:18,by=height-(phone?150:135);
     hits.push({id:'panel',label:'Live mode',x:bx,y:by,w:bw,h:phone?140:122});
     rect(bx,by+3,bw,phone?140:122,[.4,.18,.28,.16],17);rect(bx,by,bw,phone?137:119,colors.panel,17);
     if(phone){selectedPanel(m,bx+10,by+9,bw-20);const space=(bw-20)/8;['pause','1','2','3','home','gather','roster','menu'].forEach((id,i)=>button(id,id==='pause'?'Pause / play':id==='gather'?'Gather neighbors':id==='roster'?'Residents':id==='menu'?'Options':id,bx+10+i*space,by+81,space-3,40,{icon:{pause:m.speed===0?'play':'pause',home:'home',gather:'people',roster:'person',menu:'more'}[id],active:['1','2','3'].includes(id)&&m.speed===Number(id)}));}
-    else{selectedPanel(m,bx+12,by+12,260);for(let i=0;i<Math.min(6,m.residents.length);i++){const r=m.residents[i],x=bx+290+i*62;portrait(r,x,by+10,42,49);hits.push({id:'resident:'+r.index,label:r.name,x,y:by+10,w:46,h:55});}text('LIVE',bx+14,by+89,13,colors.mint);text('Town 11',bx+65,by+90,11,colors.muted);const start=bx+290;['pause','1','2','3','home','gather','roster','menu'].forEach((id,i)=>button(id,id==='pause'?'Pause / play':id==='gather'?'Gather neighbors':id==='roster'?'Residents':id==='menu'?'Options':id,start+i*46,by+74,39,34,{icon:{pause:m.speed===0?'play':'pause',home:'home',gather:'people',roster:'person',menu:'more'}[id],active:['1','2','3'].includes(id)&&m.speed===Number(id)}));}
+    else{selectedPanel(m,bx+12,by+12,260);for(let i=0;i<Math.min(6,m.residents.length);i++){const r=m.residents[i],x=bx+290+i*62;portrait(r,x,by+10,42,49);hits.push({id:'resident:'+r.index,label:r.name,x,y:by+10,w:46,h:55});}text('LIVE',bx+14,by+89,13,colors.mint);text('Town 12',bx+65,by+90,11,colors.muted);const start=bx+290;['pause','1','2','3','home','gather','roster','menu'].forEach((id,i)=>button(id,id==='pause'?'Pause / play':id==='gather'?'Gather neighbors':id==='roster'?'Residents':id==='menu'?'Options':id,start+i*46,by+74,39,34,{icon:{pause:m.speed===0?'play':'pause',home:'home',gather:'people',roster:'person',menu:'more'}[id],active:['1','2','3'].includes(id)&&m.speed===Number(id)}));}
     if(menu==='options'){const w=Math.min(300,width-24),x=width-w-12,y=Math.max(56,by-342);rect(x,y,w,328,colors.panel,16);text('Live mode',x+16,y+15,20);button('close','Close',x+w-43,y+8,32,32,{icon:'close'});const rows=[['overview','Neighborhood overview'],['roof',m.open?'Put the roof back':'Look inside'],['evening',m.evening?'Daylight':'Evening light'],['palette','Change cottage colors'],['quality',m.soft?'Soft shading: on':'Soft shading: off'],['ambient',m.ambient?'Ambient details: on':'Ambient details: off'],['new','New neighborhood']];rows.forEach(([id,label],i)=>button(id,label,x+12,y+52+i*37,w-24,32));}
     else if(menu==='residents'){const w=Math.min(432,width-24),x=(width-w)/2,y=Math.max(8,by-454),cw=(w-24)/4;rect(x,y,w,442,colors.panel,16);text('Neighbors',x+14,y+15,20);button('close','Close',x+w-43,y+8,32,32,{icon:'close'});m.allResidents.forEach((r,i)=>{const xx=x+12+(i%4)*cw,yy=y+54+Math.floor(i/4)*47;portrait(r,xx,yy,30,36);text(r.name.slice(0,6),xx+32,yy+12,10);hits.push({id:'resident:'+r.index,label:r.name,x:xx,y:yy,w:cw-4,h:44});});}
     // The command strip shares the glyph atlas and the existing GPU batch.
@@ -59,17 +59,17 @@ export function createLiveHUD(renderer,canvas,onAction){
       const qw=Math.min(bw,420),qx=bx,qy=by-72,cw=(qw-16)/6;
       rect(qx,qy,qw,64,colors.panel,13);text('Actions',qx+10,qy+7,11,colors.muted);
       for(let i=0;i<m.queue.length;i++){const c=m.queue[i],xx=qx+8+i*cw;
-        button('cancel:'+c.id,c.kind==='go'?'Go here':c.kind==='tv'?'TV':c.kind==='drink'?'Drink':'Chat',xx,qy+24,cw-4,36,{active:c.active,icon:phone?({go:'follow',tv:'tv',drink:'cup',talk:'chat'}[c.kind]):undefined});
+        button('cancel:'+c.id,c.kind==='go'?'Go here':c.kind==='tv'?'TV':c.kind==='drink'?'Drink':c.kind==='seat'?'Sit':'Chat',xx,qy+24,cw-4,36,{active:c.active,icon:phone?({go:'follow',tv:'tv',drink:'cup',talk:'chat',seat:'seat'}[c.kind]):undefined});
         icon('close',xx+cw-15,qy+24,10,c.active?colors.white:colors.muted);
       }
     }
-    if(m.goal){icon('follow',m.goal.x-15,m.goal.y-15,30,colors.mint);}
+    if(m.goal&&Number.isFinite(m.goal.x)&&Number.isFinite(m.goal.y)){icon('follow',m.goal.x-15,m.goal.y-15,30,colors.mint);}
     if(context&&!menu){
-      const ground=context.kind==='ground',person=context.kind==='resident';
+      const ground=context.kind==='ground',person=context.kind==='resident',seat=context.kind==='seat';
       const w=Math.min(210,width-16),h=person?130:90,x=Math.max(8,Math.min(width-w-8,context.x-w/2)),y=Math.max(52,Math.min(by-82-h,context.y-h+14));
       hits.push({id:'panel',label:'Actions',x,y,w,h});rect(x,y,w,h,colors.panel,14);
-      text(ground?'Walk here':person?context.title:context.kind==='drink'?'Dining table':'Television',x+12,y+12,15);
-      button(ground?'go':person?'chat-target':context.kind,ground?'Go here':person?'Chat':context.kind==='drink'?'Have a drink':'Watch TV',x+10,y+42,w-20,36);
+      text(ground?'Walk here':person?context.title:seat?(context.name||'Seat'):context.kind==='drink'?'Dining table':'Television',x+12,y+12,15);
+      button(ground?'go':person?'chat-target':context.kind,ground?'Go here':person?'Chat':seat?'Sit':context.kind==='drink'?'Have a drink':'Watch TV',x+10,y+42,w-20,36);
       if(person)button('select-target','Select resident',x+10,y+83,w-20,34);
     }
     const focused=hits[focus];if(focused)rect(focused.x-2,focused.y-2,focused.w+4,2,colors.mint,0);
@@ -80,7 +80,7 @@ export function createLiveHUD(renderer,canvas,onAction){
   function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;material.uniforms.resolution.value.set(width,height);stamp='';}
   function update(m,now){const next=JSON.stringify([m.selected,m.speed,m.inside,m.open,m.evening,m.soft,m.ambient,m.following,m.notice,m.residents.map(r=>r.index),m.queue,m.goal,context,menu,hover,focus,width,height]);if(next!==stamp||now-lastUpdate>250){stamp=next;lastUpdate=now;renderModel(m);}}
   function hit(x,y){return [...hits].reverse().find(b=>x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h)||null;}
-  function activate(id){stamp='';if(['go','chat-target','select-target','tv','drink'].includes(id)&&context){const payload=context;context=null;onAction(id,payload);return;}if(id==='menu'){context=null;menu=menu?'':'options';return;}if(id==='roster'){context=null;menu=menu==='residents'?'':'residents';return;}if(id==='close'){menu='';return;}if(id.startsWith('resident:'))menu='';onAction(id);}
+  function activate(id){stamp='';if(['go','chat-target','select-target','tv','drink','seat'].includes(id)&&context){const payload=context;context=null;onAction(id,payload);return;}if(id==='menu'){context=null;menu=menu?'':'options';return;}if(id==='roster'){context=null;menu=menu==='residents'?'':'residents';return;}if(id==='close'){menu='';return;}if(id.startsWith('resident:'))menu='';onAction(id);}
   function render(){const auto=renderer.autoClear;renderer.autoClear=false;renderer.setRenderTarget(null);renderer.render(scene,camera);renderer.autoClear=auto;}
   resize();return {resize,update,render,hit,activate,closeContext(){context=null;stamp='';},openContext(kind,x,y,data={}){context={kind,x,y,...data};menu='';focus=-1;stamp='';},dismiss(){context=null;menu='';stamp='';},hover(x,y){const id=hit(x,y)?.id??'';if(id!==hover){hover=id;canvas.style.cursor=id?'pointer':'grab';}},key(key){if(key==='Tab'){focus=(focus+1)%hits.length;stamp='';return true;}if((key==='Enter'||key===' ')&&focus>=0){activate(hits[focus].id);return true;}if(key==='Escape'){if(context)context=null;else menu=menu?'':'options';stamp='';return true;}focus=-1;return false;},info:()=>({drawCalls:1,glyphAtlasUploads:1,portraitAtlasBuilds:portraitBuilds,portraitCount:32,context:context?{kind:context.kind,point:context.point}:null,textureSize:[1024,512],vertices,controls:hits.map(b=>({...b})),menu}),dispose(){geometry.dispose();material.dispose();texture.dispose();}};
 }
