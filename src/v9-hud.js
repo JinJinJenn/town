@@ -35,7 +35,7 @@ export function createLiveHUD(renderer,canvas,onAction){
   function selectedPanel(m,x,y,w){icon('diamond',x,y+7,34,colors.mint);text(m.selected.name,x+41,y+3,18);text(m.selected.state,x+41,y+28,12,colors.muted);button('follow','Follow',x+w-84,y+4,36,36,{icon:'follow',active:m.following});button('sit','Sit / stand',x+w-42,y+4,36,36,{icon:'seat'});}
   function renderModel(m){
     vertices=0;hits=[];const phone=width<1000;
-    rect(12,12,phone?194:240,34,colors.panel,17);icon('diamond',22,19,20,colors.mint);text('LIVE',49,21,12,colors.mint);text(`${m.inside} at home / 32 neighbors`,89,21,phone?10:12,colors.ink);
+    rect(12,12,phone?244:280,34,colors.panel,17);icon('diamond',22,19,20,colors.mint);text('LIVE',49,21,12,colors.mint);text(`${m.inside} at home / 32 neighbors`,89,21,phone?10:12,colors.ink);
     for(const b of m.bubbles??[]){if(b.x<10||b.x>width-20||b.y<55||b.y>height-170)continue;rect(b.x-12,b.y-12,24,21,colors.panel,8);icon('chat',b.x-9,b.y-10,18,colors.mint);}
     const bw=phone?width-16:Math.min(width-40,1120),bx=(width-bw)/2,by=height-(phone?142:102);
     hits.push({id:'panel',label:'Live mode',x:bx,y:by,w:bw,h:phone?128:81});
