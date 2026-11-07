@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     env:
-      BASELINE_ROOT: ${{ runner.temp }}/town-v6-baseline
+      BASELINE_ROOT: /tmp/town-v6-baseline
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
