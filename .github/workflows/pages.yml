@@ -1,0 +1,128 @@
+name: Deploy Town to Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'index.html'
+      - 'style.css'
+      - 'package*.json'
+      - 'tools/vendor.mjs'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: town-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies and bundle the renderer
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+      - name: Check source and generation tests
+        run: |
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Stage the public game, not the development repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html style.css _site/
+          cp -R src vendor _site/
+          if [ -d assets ]; then cp -R assets _site/; fi
+          touch _site/.nojekyll
+          node --input-type=module <<'NODE'
+          import { readdir, readFile, writeFile } from 'node:fs/promises';
+          import { createHash } from 'node:crypto';
+          import assert from 'node:assert/strict';
+          const files = {};
+          async function scan(dir = '') {
+            for (const entry of await readdir(`_site/${dir}`, { withFileTypes: true })) {
+              const relative = `${dir}${entry.name}`;
+              if (entry.isDirectory()) await scan(`${relative}/`);
+              else if (entry.isFile()) files[relative] = createHash('sha256').update(await readFile(`_site/${relative}`)).digest('hex');
+              else throw new Error(`Unsupported publish entry: ${relative}`);
+            }
+          }
+          await scan();
+          for (const file of ['index.html', 'style.css', 'src/main.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
+          await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.GITHUB_SHA, files }, null, 2));
+          console.log(`Prepared ${Object.keys(files).length} public files with same-origin renderer imports.`);
+          NODE
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check Pages configuration
+        uses: actions/configure-pages@v5
+      - name: Publish the game
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Verify the published commit and every runtime file
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto';
+          import assert from 'node:assert/strict';
+          import { setTimeout as sleep } from 'node:timers/promises';
+          const base = new URL(process.env.SITE_URL);
+          if (!base.pathname.endsWith('/')) base.pathname += '/';
+          async function get(file) {
+            const url = new URL(file, base);
+            url.searchParams.set('deployment', process.env.EXPECTED_COMMIT);
+            const response = await fetch(url, { signal: AbortSignal.timeout(15000), cache: 'no-store' });
+            assert.equal(response.status, 200, `${url.pathname}: HTTP ${response.status}`);
+            return Buffer.from(await response.arrayBuffer());
+          }
+          for (let attempt = 0; attempt < 12; attempt++) {
+            try {
+              const manifest = JSON.parse((await get('__deployment.json')).toString());
+              assert.equal(manifest.commit, process.env.EXPECTED_COMMIT, 'The public site is serving an older deployment.');
+              for (const [file, hash] of Object.entries(manifest.files)) {
+                const bytes = await get(file);
+                assert.equal(createHash('sha256').update(bytes).digest('hex'), hash, `Published file differs from build: ${file}`);
+              }
+              console.log(`Verified ${base.href} at ${manifest.commit}: all ${Object.keys(manifest.files).length} published files match the build.`);
+              break;
+            } catch (error) {
+              if (attempt === 11) throw error;
+              console.log(`Waiting for the public deployment: ${error.message}`);
+              await sleep(5000);
+            }
+          }
+          NODE
+      - name: Explain the one-time Pages setting if deployment fails
+        if: failure()
+        run: |
+          echo 'If Pages is not enabled, open https://github.com/JinJinJenn/town/settings/pages and select GitHub Actions under Build and deployment > Source, then re-run this workflow.' >> "$GITHUB_STEP_SUMMARY"
