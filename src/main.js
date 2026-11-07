@@ -1,3 +1,6 @@
+import { enhanceKit } from './art.js';
+import { createArtWorld } from './art-world.js';
+import { createArtLighting, createDioramaRenderer } from './render-style.js';
 import * as THREE from '../vendor/three.module.js';
 import { createKit } from './kit.js';
 import { createWorld } from './world.js';
@@ -11,17 +14,12 @@ export function start() {
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
-  const sky=new THREE.HemisphereLight('#fff4df','#a0ad8b',1.85);scene.add(sky);
-  const sun=new THREE.DirectionalLight('#fff0cf',3.05);sun.position.set(-38,75,35);sun.castShadow=true;
-  const mapSize=innerWidth<700?1024:2048;sun.shadow.mapSize.set(mapSize,mapSize);
-  Object.assign(sun.shadow.camera,{left:-76,right:76,top:76,bottom:-76,near:1,far:180});
-  sun.shadow.bias=-.00016;sun.shadow.normalBias=.035;sun.shadow.intensity=.72;scene.add(sun,sun.target);
-  const fill=new THREE.DirectionalLight('#d8e8db',.33);fill.position.set(40,30,-50);scene.add(fill);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(6,0,4), kit=createKit();
+  const target=new THREE.Vector3(0,0,-2), kit=enhanceKit(createKit());
+  const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
-  let world=createWorld(kit,seed);scene.add(world.group);
-  let viewHeight=innerWidth<700?65:52, yaw=.76, elevation=.78, paused=false, touring=false, following=null, selected=null, evening=false;
+  let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);
+  let viewHeight=innerWidth<700?55:44, yaw=.76, elevation=.69, paused=false, touring=false, following=null, selected=null, evening=false;
   let previousView=null;
   let last=performance.now(), clock=0, tourClock=0, raf=0, toastTimer=0, frames=0;
   const keys=new Set(), raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
@@ -44,7 +42,7 @@ export function start() {
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);resize();updateCamera();
   function setTour(value){touring=value;$('tour').setAttribute('aria-pressed',String(value));if(value){setHomeOpen(false,false);following=null;tourClock=0;$('follow').textContent='Follow this resident';}}
   function manual(){setTour(false);following=null;$('follow').textContent='Follow this resident';}
-  function resetCamera(){setHomeOpen(false,false);manual();target.set(6,0,4);viewHeight=innerWidth<700?65:52;yaw=.76;elevation=.78;refreshProjection();}
+  function resetCamera(){setHomeOpen(false,false);manual();target.set(0,0,-2);viewHeight=innerWidth<700?55:44;yaw=.76;elevation=.69;refreshProjection();}
   function zoom(factor){manual();viewHeight=clamp(viewHeight*factor,12,100);refreshProjection();}
   function pan(dx,dy){
     const units=viewHeight/Math.max(1,host.clientHeight),rightX=Math.cos(yaw),rightZ=-Math.sin(yaw),forwardX=Math.sin(yaw),forwardZ=Math.cos(yaw);
@@ -96,17 +94,19 @@ export function start() {
   }
   function setEvening(value){
     evening=value;$('evening').setAttribute('aria-pressed',String(value));$('time-label').textContent=value?'The evening is settling in':'A quiet afternoon';
-    sky.color.set(value?'#b7c2df':'#fff4df');sky.groundColor.set(value?'#727f87':'#a0ad8b');sky.intensity=value?1.2:1.85;
-    sun.color.set(value?'#ffc7a3':'#fff0cf');sun.intensity=value?1.4:3.05;sun.position.set(value?-58:-38,value?32:75,35);
-    scene.background.set(value?'#bbc4ca':'#e6eadb');scene.fog.color.copy(scene.background);kit.materials.glass.emissiveIntensity=value?.65:.05;
-    renderer.toneMappingExposure=value?.92:1.08;
+    lighting.apply(value);
   }
   function loadWorld(value){
-    seed=cleanSeed(value);choose(null);scene.remove(world.group);world.dispose();world=createWorld(kit,seed);scene.add(world.group);
+    seed=cleanSeed(value);choose(null);scene.remove(world.group);world.dispose();world=createArtWorld(kit,createWorld,seed);scene.add(world.group);
     $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
     try{const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState(null,'',url);}catch{}
     resetCamera();toast(`The neighborhood is ready. Its seed is ${seed}.`);
   }
+  $('soft-rendering').checked=compositor.supported&&load('town.softRendering.v1')!=='0';
+  $('soft-rendering').disabled=!compositor.supported;
+  if(!compositor.supported)$('soft-rendering').title='This device uses the standard renderer because floating-point render targets are unavailable.';
+  compositor.setEnabled($('soft-rendering').checked);
+  $('soft-rendering').onchange=()=>{compositor.setEnabled($('soft-rendering').checked);save('town.softRendering.v1',compositor.enabled?'1':'0');};
   $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
   $('visit-home').onclick=()=>{choose(homeMeta());setHomeOpen(true);};
   $('open-home').onclick=()=>setHomeOpen(!world.home.isOpen);
@@ -154,23 +154,23 @@ export function start() {
   function frame(now){
     const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;clock+=dt;
     if(!paused)world.step(dt);
-    if(touring){tourClock+=dt;const speed=reduced?.45:1;target.x=6+Math.sin(tourClock*.065*speed)*11;target.z=4+Math.sin(tourClock*.046*speed)*10;yaw=.76+Math.sin(tourClock*.035*speed)*.1;}
+    if(touring){tourClock+=dt;const speed=reduced?.45:1;target.x=Math.sin(tourClock*.065*speed)*11;target.z=-2+Math.sin(tourClock*.046*speed)*10;yaw=.76+Math.sin(tourClock*.035*speed)*.1;}
     if(following!==null){const actor=world.residents[following];if(actor)target.lerp(new THREE.Vector3(actor.root.position.x,0,actor.root.position.z),1-Math.exp(-dt*3));}
     const move=dt*180;
     if(keys.has('w')||keys.has('arrowup'))pan(0,move);if(keys.has('s')||keys.has('arrowdown'))pan(0,-move);
     if(keys.has('a')||keys.has('arrowleft'))pan(move,0);if(keys.has('d')||keys.has('arrowright'))pan(-move,0);
     if(keys.has('q'))yaw+=dt*.6;if(keys.has('e'))yaw-=dt*.6;
     if(selected?.type==='resident') {const actor=world.residents[selected.index];ring.visible=true;ring.position.set(actor.root.position.x,actor.root.position.y+.013,actor.root.position.z);if(frames%45===0)$('selection-description').textContent=actor.meta.description;}
-    updateCamera();world.home.update(camera,paused?0:dt,world.homeActivity.doorWanted());if(frames%8===0)syncHomeUI();renderer.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
+    updateCamera();world.home.update(camera,paused?0:dt,world.homeActivity.doorWanted());if(frames%8===0)syncHomeUI();compositor.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
   }
   document.addEventListener('visibilitychange',()=>{
     keys.clear();if(document.hidden){cancelAnimationFrame(raf);raf=0;}else if(!raf){last=performance.now();raf=requestAnimationFrame(frame);}
   });
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;toast('The graphics context was interrupted. Reload the page to restart the neighborhood.');});
-  renderer.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
+  compositor.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
   // Small inspection API for regression tests and future performance work.
   window.townDebug={
-    getStats:()=>({...world.stats,seed,frames,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
+    getStats:()=>({...world.stats,artVersion:kit.artVersion,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
     getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
     selectHome:()=>choose(homeMeta()),

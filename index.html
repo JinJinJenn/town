@@ -22,7 +22,7 @@
       <button class="close" id="close-welcome" aria-label="Close introduction">×</button>
       <p class="eyebrow"><span aria-hidden="true">✿</span> JinJinJenn's neighborhood</p>
       <h1>Welcome to<br><em>Town.</em></h1>
-      <p>Spend an afternoon in Jenn's neighborhood, where the cafe is open and the residents are out for a walk.</p>
+      <p>Spend an afternoon in Jenn's neighborhood, where the cafe is open, the gardens are in bloom, and the residents are out for a walk.</p>
       <p>Drag to explore the streets, select a resident to follow them, or visit Clover Cottage to look inside its furnished rooms.</p>
       <button id="explore" class="primary">Explore the neighborhood <span aria-hidden="true">→</span></button>
       <a class="mod-link" href="https://jinjinjenn.github.io/#mods">Browse Jenn's Sims 4 mods ↗</a>
@@ -51,7 +51,7 @@
       <span class="tool-divider"></span><button id="new-town" title="Generate another neighborhood">New town</button>
     </div>
     <p class="hint" id="hint">Drag to explore · Scroll to zoom · Select a resident</p>
-    <p class="version"><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> checkpoint 02</p>
+    <p class="version"><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> checkpoint 03</p>
   </main>
   <dialog id="help-dialog">
     <form method="dialog"><button class="close" aria-label="Close help">×</button></form>
@@ -59,6 +59,7 @@
     <p>Drag the scene to move around, scroll or pinch to zoom, and right-drag to rotate. On a keyboard, use WASD or the arrow keys to move, Q and E to turn, and R to return to the starting view.</p>
     <p>Select a resident to follow their walk, or select a building to learn which kind of home the generator created. Tour moves the camera for you, while Pause stops the residents.</p>
     <p>This checkpoint contains a finite neighborhood with procedural buildings and walking residents. Clover Cottage has the first furnished interior. Use Visit Clover Cottage to look inside, then ask Luca to sit on the sofa. Decorating and an expanding world are not implemented yet.</p>
+    <p><label><input type="checkbox" id="soft-rendering" checked> Use soft contact shading and warm highlight diffusion.</label> Turn this off for lighter rendering on slower devices.</p>
     <label for="seed">Neighborhood seed</label><div class="seed-row"><input id="seed" maxlength="48" autocomplete="off" spellcheck="false"><button id="load-seed" class="primary">Load</button></div>
     <p class="small">The same seed produces the same neighborhood. Changes here do not affect Jenn's other games or her website.</p>
     <a href="https://github.com/JinJinJenn/town">View the project on GitHub ↗</a>
