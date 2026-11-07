@@ -1,14 +1,14 @@
 import * as THREE from '../vendor/three.module.js';
 
 export function createArtLighting(scene, renderer, kit) {
-  renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const sky=new THREE.HemisphereLight('#e9efff','#a69c83',1.15);
   const sun=new THREE.DirectionalLight('#ffe4cd',2.65);
   const fill=new THREE.DirectionalLight('#efdae7',.42);
   sun.position.set(-42,58,32);fill.position.set(48,28,-35);sun.castShadow=true;
   const size=innerWidth<700?1024:2048;sun.shadow.mapSize.set(size,size);
   Object.assign(sun.shadow.camera,{left:-76,right:76,top:76,bottom:-76,near:1,far:180});
-  sun.shadow.bias=-.00012;sun.shadow.normalBias=.045;sun.shadow.intensity=.78;sun.shadow.radius=2.8;
+  sun.shadow.bias=-.00012;sun.shadow.normalBias=.045;sun.shadow.intensity=.65;
   scene.add(sky,sun,sun.target,fill);
   function apply(evening=false){
     sky.color.set(evening?'#becdeb':'#e9efff');sky.groundColor.set(evening?'#8e8297':'#a69c83');sky.intensity=evening?.85:1.15;
