@@ -5,17 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fce5ed">
   <meta name="description" content="Explore JinJinJenn's procedural neighborhood, meet its residents, and watch the afternoon go by.">
-  <title>Town V5 · JinJinJenn</title>
+  <title>Town V6 · JinJinJenn</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath fill='%23879c79' d='M20 1 38 24 20 47 2 24Z'/%3E%3Cpath fill='%23adc399' d='m20 1 0 46L2 24Z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./src/v4.css">
   <link rel="stylesheet" href="./src/v4-layout.css">
   <link rel="stylesheet" href="./src/v5.css">
+  <link rel="stylesheet" href="./src/v6.css">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="https://jinjinjenn.github.io/" aria-label="JinJinJenn home"><span class="brand-flower" aria-hidden="true">✿</span>JinJinJenn<span class="brand-dot">.</span></a>
-    <span class="brand-note">A neighborhood by Jenn</span><nav aria-label="Main navigation"><span class="active" aria-current="page">⌂ Town</span><button id="residents" class="nav-button">Residents</button><a href="https://jinjinjenn.github.io/mods/">Sims 4 mods</a><a class="desktop" href="https://jinjinjenn.github.io/devlog/">Devlog ↗</a><button id="photo" class="round" aria-label="Toggle photo view" title="Hide the interface" aria-pressed="false">▧</button><button id="help" class="round" aria-label="Open controls and project information">?</button></nav>
+    <span class="brand-note">A neighborhood by Jenn</span><nav aria-label="Main navigation"><span class="active" aria-current="page">⌂ Town</span><button id="residents" class="nav-button">Residents</button><a href="https://jinjinjenn.github.io/mods/">Sims 4 mods</a><a class="desktop" href="https://jinjinjenn.github.io/devlog/">Devlog ↗</a><a class="art-nav" href="./assets/v6/">Art cards</a><button id="photo" class="round" aria-label="Toggle photo view" title="Hide the interface" aria-pressed="false">▧</button><button id="help" class="round" aria-label="Open controls and project information">?</button></nav>
   </header>
   <main id="world" aria-label="Interactive 3D neighborhood">
     <canvas id="scene" tabindex="0" aria-label="Town scene. Drag to pan, scroll to zoom, use WASD to move, and Q or E to rotate."></canvas>
@@ -29,7 +30,7 @@
       <p>Drag to explore the streets, select a resident to follow them, or visit Clover Cottage to look inside its furnished rooms.</p>
       <button id="explore" class="primary">Explore the neighborhood <span aria-hidden="true">→</span></button>
       <a class="mod-link" href="https://jinjinjenn.github.io/mods/">Browse Jenn's Sims 4 mods ↗</a>
-      <p class="card-foot">Town V5 brings brighter rose and mint colors to the gardens and cottage. Choose a furniture palette and we’ll remember it in this browser.</p>
+      <p class="card-foot">Town V6 mixes painted garden details with a living 3D neighborhood. Choose a cottage palette, follow a resident, or leave the camera touring the streets.</p>
     </section>
     <section id="inspector" class="card inspector" hidden aria-label="Selected resident or building">
       <button class="close" id="close-inspector" aria-label="Close selection">×</button>
@@ -43,7 +44,7 @@
     <div id="loading" class="loading" role="status"><span class="jewel" aria-hidden="true"></span><p>Preparing the neighborhood…</p></div>
     <div id="error" class="card error" role="alert" hidden><h2>The 3D scene could not start.</h2><p id="error-message"></p><p>The project files and your browser settings are safe. You can still visit Jenn's main website.</p><a href="https://jinjinjenn.github.io/">Visit JinJinJenn ↗</a></div>
     <div id="toast" class="toast" role="status" hidden></div>
-    <button id="exit-photo" class="exit-photo" hidden>Return to Town <span aria-hidden="true">↩</span></button><div class="toolbar" role="toolbar" aria-label="Town controls"><span class="toolbar-brand" aria-hidden="true">✿ <b>Town</b> <small>V5</small></span>
+    <button id="exit-photo" class="exit-photo" hidden>Return to Town <span aria-hidden="true">↩</span></button><div class="toolbar" role="toolbar" aria-label="Town controls"><span class="toolbar-brand" aria-hidden="true">✿ <b>Town</b> <small>V6</small></span>
       <button id="tour" aria-pressed="false" title="Take a slow camera tour"><span aria-hidden="true">◈</span> Tour</button>
       <button id="pause" aria-pressed="false" title="Pause resident movement"><span aria-hidden="true">Ⅱ</span> Pause</button>
       <button id="evening" aria-pressed="false" title="Change the lighting"><span aria-hidden="true">☾</span> Evening</button>
@@ -54,7 +55,7 @@
       <span class="tool-divider"></span><button id="new-town" title="Generate another neighborhood">New town</button>
     </div>
     <p class="hint" id="hint">Drag to explore · Scroll to zoom · Select a resident</p>
-    <p class="version"><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> Town V5</p>
+    <p class="version"><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> Town V6</p>
   </main>
   <dialog id="help-dialog">
     <form method="dialog"><button class="close" aria-label="Close help">×</button></form>
@@ -64,6 +65,8 @@
     <p>Explore the neighborhood, choose a resident from the Residents menu, or visit Clover Cottage to look inside. You can change the cottage palette and invite Luca to use the sofa. Furniture placement, needs, and an expanding world are not part of this version yet.</p>
     <p><label><input type="checkbox" id="soft-rendering" checked> Use soft contact shading and warm highlight diffusion.</label> Turn this off for lighter rendering on slower devices.</p>
     <p><label><input type="checkbox" id="petals" checked> Show drifting blossom petals.</label></p>
+    <p><label><input type="checkbox" id="mixed-media" checked> Show illustrated garden layers.</label> The houses, furniture, and residents remain fully 3D.</p>
+    <p class="media-status"><a href="./assets/v6/">Browse the generated art cards and transparent textures.</a></p>
     <label for="seed">Neighborhood seed</label><div class="seed-row"><input id="seed" maxlength="48" autocomplete="off" spellcheck="false"><button id="load-seed" class="primary">Load</button></div>
     <p class="small">The same seed produces the same neighborhood. Changes here do not affect Jenn's other games or her website.</p>
     <a href="https://github.com/JinJinJenn/town">View the project on GitHub ↗</a>
