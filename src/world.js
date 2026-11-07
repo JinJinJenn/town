@@ -139,6 +139,7 @@ export function createWorld(kit, seed) {
 }
 
 function makeResident(kit,parent,lot,seed,index,pick) {
+  if(kit.makeResident)return kit.makeResident(parent,lot,seed,index,pick);
   const r=rng(`${seed}:resident:${index}`), root=kit.group(parent);
   const skins=['#d3a17d','#efc6a0','#9f6e54','#bf8b6c','#f1d3b5'];
   const shirts=['#bd858f','#91ada7','#bbad83','#9c9cba','#c49877','#e1d8b8','#839a82'];

@@ -7,7 +7,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 export function makeHouseholdNavigation(plan,origin){
   const nav=makeLiveNavigation(plan,origin);
-  const nearest=(x,z)=>nav.nodes.filter(n=>n.zone==='home').reduce((a,b)=>Math.hypot(a.x-origin.x-x,a.z-origin.z-z)<Math.hypot(b.x-origin.x-x,b.z-origin.z-z)?a:b).id;
+  const reachable=new Set([nav.gate]),queue=[nav.gate];for(let i=0;i<queue.length;i++)for(const id of nav.nodes[queue[i]].edges)if(!reachable.has(id)){reachable.add(id);queue.push(id);}
+  const nearest=(x,z)=>nav.nodes.filter(n=>n.zone==='home'&&reachable.has(n.id)).reduce((a,b)=>Math.hypot(a.x-origin.x-x,a.z-origin.z-z)<Math.hypot(b.x-origin.x-x,b.z-origin.z-z)?a:b).id;
   const slots=[];
   for(const [pair,points] of [ [[-4.7,1.9],[-4.7,3.0]], [[-.7,-1.3],[-.7,.1]], [[-2.4,-2.75],[-1.1,-2.75]] ].entries()){
     for(const [side,[x,z]] of points.entries())slots.push({id:`talk-${pair}-${side}`,node:nearest(x,z),activity:'talk',pair,side,hipY:0});
@@ -39,11 +40,11 @@ export function createHousehold(world){
   function pair(a){if(a.slot?.activity!=='talk'||a.partner!==null||a.route.length||a.settle>0)return;const other=nav.slots.find(s=>s.activity==='talk'&&s.pair===a.slot.pair&&s.node!==a.slot.node),b=agents[reserved.get(other.node)];if(!b||b.route.length||b.settle>0||b.partner!==null||b.slot?.activity!=='talk')return;
     a.partner=b.index;b.partner=a.index;a.conversationStart=b.conversationStart=time;a.dwell=b.dwell=18+random()*14;a.state=b.state='talking';a.face=Math.atan2(b.pos.x-a.pos.x,b.pos.z-a.pos.z);b.face=a.face+Math.PI;conversations++;}
   function depart(a){const id=free(nav.publicSlots);if(id!==null&&travel(a,id)){departures++;return true;}a.dwell=2;return false;}
-  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(!kind||s.activity===kind)&&!reserved.has(s.node));if(!choices.length)return null;
+  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(!kind||s.activity===kind)&&!reserved.has(s.node)&&!agents.some(b=>b!==a&&b.pending===s.activity));if(!choices.length)return null;
     // Finish existing pairs before starting another unpaired conversation.
     const waiting=choices.filter(s=>s.activity==='talk'&&nav.slots.some(t=>t.pair===s.pair&&t.node!==s.node&&reserved.has(t.node)));if(!kind&&waiting.length)choices=waiting;
     return choices[Math.floor(random()*choices.length)];}
-  function decide(a){if(a.pending){const slot=chooseSlot(a,a.pending);if(slot){a.pending=null;travel(a,slot.node);return;}}
+  function decide(a){if(a.pending){const slot=chooseSlot(a,a.pending);if(slot&&travel(a,slot.node)){a.pending=null;return;}}
     if(a.slot){depart(a);return;}if(a.priority||time>=a.visitDue){const slot=chooseSlot(a);if(slot){travel(a,slot.node);return;}}
     const id=free(nav.publicSlots);if(id!==null&&id!==a.node)travel(a,id);else a.dwell=1;}
   function animate(a,dt){const r=a.actor,blend=1-Math.exp(-dt*8),sitting=a.slot&&['watching TV','having a drink'].includes(a.state);a.walk+=(clamp(a.speed/1.2,0,1)-a.walk)*blend;a.sit+=(Number(!!sitting)-a.sit)*blend;
