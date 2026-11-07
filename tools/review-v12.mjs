@@ -13,6 +13,7 @@ try{
   let stage='boot';const errors=[];page.on('pageerror',e=>errors.push({stage,text:e.message}));page.on('console',m=>{if(m.type()==='error')errors.push({stage,text:m.text()});});
   await page.goto('http://127.0.0.1:4173/town/?test=1',{waitUntil:'networkidle',timeout:60000});
   await page.waitForFunction(()=>window.townDebug?.getStats().version===12&&window.townDebug.getStats().frames>3,null,{timeout:90000});
+  const bootGeometry=await page.evaluate(()=>window.townDebug.geometryIssues());if(bootGeometry.length)console.error('V12 boot geometry issues',JSON.stringify(bootGeometry));
   stage='seat-context';const seat=await page.evaluate(()=>window.townDebug.seatScreen('home-lounger'));assert.ok(seat);
   await page.mouse.click(seat.x,seat.y);
   await page.waitForFunction(()=>window.townDebug.hud().context?.kind==='seat',null,{timeout:15000});
