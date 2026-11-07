@@ -39,9 +39,11 @@ test('V12 conversations can grow beyond pairs and keep a rotating speaker',()=>{
   const live=createHousehold(mockWorld());
   assert.ok(live.command(20,'talk',null,6).ok);
   for(let i=0;i<5000&&live.agents[20].socialGroup.length<2;i++)live.step(1/30);
+  console.log('v12 pair',live.agents[20].state,live.agents[20].partner,live.agents[20].socialGroup,live.agents[6].state,live.agents[6].partner,live.agents[6].socialGroup,live.getCommands(20));
   assert.ok(live.agents[20].socialGroup.length>=2);
   assert.ok(live.command(7,'talk',null,6).ok);
   for(let i=0;i<5000&&live.agents[6].socialGroup.length<3;i++)live.step(1/30);
+  console.log('v12 group3',live.agents[20].state,live.agents[20].socialGroup,live.agents[6].state,live.agents[6].socialGroup,live.agents[7].state,live.agents[7].socialGroup,live.getCommands(7));
   assert.ok(live.agents[6].socialGroup.length>=3);
   assert.ok(live.stats().maxGroup>=3);
   const ids=live.agents[6].socialGroup;assert.ok(ids.includes(20)&&ids.includes(7));
