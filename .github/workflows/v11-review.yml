@@ -1,0 +1,66 @@
+name: Review Town V11
+on:
+  push:
+    branches: [feat/checkpoint-11-player-control]
+    paths: ['src/**', 'tools/**', 'tests/**', '.github/workflows/v11-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v11-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Integrate and commit source before browser work
+        run: |
+          python3 tools/integrate-v11.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src index.html package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v11): activate player commands and GPU action queue'
+            git push origin HEAD:feat/checkpoint-11-player-control
+          fi
+      - name: Validate navigation, commands and existing systems
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Test actual ground clicks, queues and phone taps
+        run: node tools/review-v11.mjs
+      - name: Commit passing screenshots and measurements
+        run: |
+          mkdir -p docs/v11-captures
+          cp artifacts-v11/*.png artifacts-v11/review.json docs/v11-captures/
+          git add docs/v11-captures
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(v11): preserve real Go here captures and interaction evidence'
+            git push origin HEAD:feat/checkpoint-11-player-control
+          fi
+      - name: Package recoverable source even on failure
+        if: always()
+        run: |
+          mkdir -p town-v11-checkpoint
+          git archive HEAD | tar -x -C town-v11-checkpoint
+          if [ -d vendor ]; then cp -R vendor town-v11-checkpoint/; fi
+          if [ -d artifacts-v11 ]; then cp -R artifacts-v11 town-v11-checkpoint/; fi
+          git rev-parse HEAD > town-v11-checkpoint/COMMIT.txt
+          cd town-v11-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v11-checkpoint
+          path: town-v11-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
