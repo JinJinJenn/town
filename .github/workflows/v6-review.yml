@@ -1,0 +1,57 @@
+name: Review Town V6
+on:
+  push:
+    branches: [feat/checkpoint-06-mixed-media]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v6-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Save integrated V6 source before testing
+        run: |
+          node tools/integrate-v6.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.js index.html package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v6): activate illustrated garden cards and generated textures'
+            git push origin HEAD:feat/checkpoint-06-mixed-media
+          fi
+      - name: Validate source and artwork integrity
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+      - name: Test mixed media, cottage interactions, regeneration and mobile
+        run: npx playwright test tests/browser/v6.spec.js
+      - name: Package source and evidence even on failure
+        if: always()
+        run: |
+          mkdir -p town-v6-checkpoint
+          git archive HEAD | tar -x -C town-v6-checkpoint
+          if [ -d vendor ]; then cp -R vendor town-v6-checkpoint/; fi
+          if [ -d artifacts-v6 ]; then cp -R artifacts-v6 town-v6-checkpoint/; fi
+          if [ -d test-results ]; then cp -R test-results town-v6-checkpoint/; fi
+          git rev-parse HEAD > town-v6-checkpoint/COMMIT.txt
+          cd town-v6-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v6-checkpoint
+          path: town-v6-checkpoint/
+          include-hidden-files: true
+          retention-days: 30

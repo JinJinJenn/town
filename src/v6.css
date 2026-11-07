@@ -1,0 +1,10 @@
+/* Illustrated accents are decoration, never blockers over live controls. */
+.card,.topbar,.toolbar{isolation:isolate}
+.card::after{content:"";position:absolute;z-index:-1;pointer-events:none;right:0;top:0;width:108px;height:96px;background:url('../assets/v6/corner.webp') top left/contain no-repeat;transform:scaleX(-1);opacity:.28}
+.welcome .welcome-flower{width:94px;height:80px;background:url('../assets/v6/corner.webp') center/contain no-repeat;font-size:0!important;opacity:1}
+.topbar{background:linear-gradient(115deg,#fff4f5 0%,#ffd9e9 65%,#f6e4f2 100%)}
+.toolbar{box-shadow:0 6px 30px #7e25582e,inset 0 1px #fff}
+#inspector .property-emblem{background:#ecf7df;color:#33733b;box-shadow:0 0 0 4px #fff7f9}
+.art-nav{font-size:12px}.media-status{color:#526447;font-size:.8rem;line-height:1.5}#mixed-media{accent-color:#4d913f}
+@media(max-width:700px){.art-nav{display:none}.card::after{width:65px;height:55px;opacity:.18}}
+@media(prefers-reduced-motion:reduce){.card,.toolbar{animation:none!important}}
