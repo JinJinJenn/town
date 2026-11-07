@@ -1,3 +1,4 @@
+import {enhanceV8Kit,summarizeV8} from './v8-props.js';
 import {createMediaLibrary,mountIllustratedLayers} from './v7-media.js';
 import {enhanceV7Kit,createV7Atmosphere} from './v7-detail.js';
 import {optimizeV7Kit} from './v7-polish.js';
@@ -21,11 +22,11 @@ export function start() {
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(0,0,-2), kit=enhanceV7Kit(optimizeV7Kit(enhanceV5Kit(enhanceV4Kit(enhanceKit(createKit())))));
+  const target=new THREE.Vector3(0,0,-2), kit=enhanceV8Kit(enhanceV7Kit(optimizeV7Kit(enhanceV5Kit(enhanceV4Kit(enhanceKit(createKit()))))));
   const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
   renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;let lastShadow=0,lastWallMask='';
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
-  let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let world=createArtWorld(kit,createWorld,seed);world.stats.v8Props=summarizeV8(world.plan);scene.add(world.group);createPetals(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
   let atmosphere=createV7Atmosphere(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
   let ui=null;
   let viewHeight=innerWidth<700?55:44, yaw=.76, elevation=.69, paused=false, touring=false, following=null, selected=null, evening=false;
@@ -114,7 +115,7 @@ export function start() {
     lighting.apply(value);media?.setEvening(value);atmosphere?.setEvening(value);renderer.shadowMap.needsUpdate=true;
   }
   function loadWorld(value){
-    seed=cleanSeed(value);choose(null);scene.remove(world.group);media?.dispose();media=null;world.dispose();world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,ui?.petals??true);atmosphere=createV7Atmosphere(kit,world,ui?.petals??true);atmosphere.setEvening(evening);ui?.resetWorld();if(mediaLibrary.status!=='loading')attachMedia();
+    seed=cleanSeed(value);choose(null);scene.remove(world.group);media?.dispose();media=null;world.dispose();world=createArtWorld(kit,createWorld,seed);world.stats.v8Props=summarizeV8(world.plan);scene.add(world.group);createPetals(kit,world,ui?.petals??true);atmosphere=createV7Atmosphere(kit,world,ui?.petals??true);atmosphere.setEvening(evening);ui?.resetWorld();if(mediaLibrary.status!=='loading')attachMedia();
     $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
     try{const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState(null,'',url);}catch{}
     resetCamera();choose(homeMeta());setHomeOpen(true);atmosphere.sync();renderer.shadowMap.needsUpdate=true;toast(`The neighborhood is ready. Its seed is ${seed}.`);
@@ -197,7 +198,7 @@ export function start() {
   compositor.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
   // Small inspection API for regression tests and future performance work.
   window.townDebug={
-    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:7,detailVersion:kit.detailVersion,v7DetailInstances:world.home.detailInstances,v7Atmosphere:atmosphere.info(),shadowRefreshHz:10,pixelRatio:renderer.getPixelRatio(),mixedMedia:media?.info()??{status:mediaLibrary.status,cards:0,enabled:illustrated},colorStyle:V5_STYLE,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
+    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:8,detailVersion:kit.detailVersion,v7DetailInstances:world.home.detailInstances,v7Atmosphere:atmosphere.info(),shadowRefreshHz:10,pixelRatio:renderer.getPixelRatio(),mixedMedia:media?.info()??{status:mediaLibrary.status,cards:0,enabled:illustrated},colorStyle:V5_STYLE,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
     getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
     selectHome:()=>choose(homeMeta()),

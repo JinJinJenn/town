@@ -139,6 +139,7 @@ export function createHome(kit, lot) {
   dressV5Home(kit,{inside,wallRoots,lot,floor});
   if(kit.artVersion==='07-cottage-detail')dressV7Home(kit,{inside,wallRoots,lot,floor});
   const v7Details=dressV7LayeredHome(kit,{inside,wallRoots,lot,floor});
+  kit.dressV8Home?.({inside,wallRoots,lot,floor});
   inside.traverse(m=>{if(m.userData.part)m.userData.paletteRole??=paletteRole(m.userData.color.getHexString());});
   source.updateMatrixWorld(true);
   const batches={};
