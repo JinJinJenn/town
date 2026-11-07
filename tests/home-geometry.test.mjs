@@ -36,3 +36,21 @@ test('cutaway walls switch with the camera without adding geometry',()=>{
   assert.deepEqual(home.visibleWalls(),{front:true,back:true,left:true,right:true});
   assert.equal(home.group.children.length,count);home.dispose();
 });
+
+
+test('the structural slab stays below the visible floorboards',()=>{
+  const lot=createPlan('petalwood').lots[10],home=createHome(kit,lot);
+  const matrix=new THREE.Matrix4(),position=new THREE.Vector3(),rotation=new THREE.Quaternion(),scale=new THREE.Vector3();
+  let found=false;
+  home.group.children[0].traverse(mesh=>{
+    if(!mesh.isInstancedMesh)return;
+    for(let i=0;i<mesh.count;i++){
+      mesh.getMatrixAt(i,matrix);matrix.decompose(position,rotation,scale);
+      if(Math.abs(scale.x-lot.width)<1e-5 && Math.abs(scale.z-lot.depth)<1e-5){
+        found=true;
+        assert.ok(position.y+scale.y/2 <= home.origin.y+.4-.015,'slab top must not share the floorboard surface');
+      }
+    }
+  });
+  assert.equal(found,true);home.dispose();
+});

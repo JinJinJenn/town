@@ -26,7 +26,8 @@ export function createHome(kit, lot) {
     part(a,'cone','#91aa92',[-.25,-.04,.08],[.4,.45,.015]);
   }
   box(base,'#bcae96',[0,.16,0],[w+.45,.32,d+.45]);
-  box(base,'#efe2c9',[0,.34,0],[w,.12,d]);
+  // Keep the slab below the floorboards; coplanar tops flicker on mobile.
+  box(base,'#efe2c9',[0,.32,0],[w,.12,d]);
   // Wide, slightly different floorboards avoid hairline shadow striping.
   for(let i=0;i<24;i++)box(inside,i%3===0?'#dbc7a8':i%3===1?'#e2ceae':'#d8c2a0',[-w/2+(i+.5)*w/24,floor-.012,0],[w/24-.008,.024,d-.22]);
   box(inside,'#c0c8ad',[-2.25,floor+.014,-2.25],[6.25,.025,4.55]);
