@@ -1,3 +1,4 @@
+import {HOME_ID,HOME_WIDTH,HOME_DEPTH} from './home-plan.js';
 // Pure data generation. No DOM, renderer, or Blender dependency.
 export const CELL = 24;
 export const LOT = 20;
@@ -46,6 +47,7 @@ export function createPlan(value = 'petalwood') {
       });
     }
   }
+  Object.assign(lots[HOME_ID], {kind:'cottage',name:'Clover Cottage',width:HOME_WIDTH,depth:HOME_DEPTH,height:3.8,floors:1,rotation:0,furnished:true});
   return { seed, lots, residents: lots.length * 2, extent: 54 };
 }
 export function sidewalkPosition(lot, distance) {

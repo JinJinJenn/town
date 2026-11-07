@@ -15,13 +15,14 @@ export function start() {
   const sun=new THREE.DirectionalLight('#fff0cf',3.05);sun.position.set(-38,75,35);sun.castShadow=true;
   const mapSize=innerWidth<700?1024:2048;sun.shadow.mapSize.set(mapSize,mapSize);
   Object.assign(sun.shadow.camera,{left:-76,right:76,top:76,bottom:-76,near:1,far:180});
-  sun.shadow.bias=-.00016;sun.shadow.normalBias=.025;scene.add(sun,sun.target);
+  sun.shadow.bias=-.00016;sun.shadow.normalBias=.035;sun.shadow.intensity=.72;scene.add(sun,sun.target);
   const fill=new THREE.DirectionalLight('#d8e8db',.33);fill.position.set(40,30,-50);scene.add(fill);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
   const target=new THREE.Vector3(6,0,4), kit=createKit();
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
   let world=createWorld(kit,seed);scene.add(world.group);
   let viewHeight=innerWidth<700?65:52, yaw=.76, elevation=.78, paused=false, touring=false, following=null, selected=null, evening=false;
+  let previousView=null;
   let last=performance.now(), clock=0, tourClock=0, raf=0, toastTimer=0, frames=0;
   const keys=new Set(), raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
   const ring=new THREE.Mesh(new THREE.RingGeometry(.55,.62,32),new THREE.MeshBasicMaterial({color:'#f4deb0',side:THREE.DoubleSide,transparent:true,opacity:.85,depthWrite:false}));
@@ -41,25 +42,57 @@ export function start() {
   }
   function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,innerWidth<700?1.25:1.5));renderer.setSize(host.clientWidth,host.clientHeight,false);refreshProjection();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);resize();updateCamera();
-  function setTour(value){touring=value;$('tour').setAttribute('aria-pressed',String(value));if(value){following=null;tourClock=0;$('follow').textContent='Follow this resident';}}
+  function setTour(value){touring=value;$('tour').setAttribute('aria-pressed',String(value));if(value){setHomeOpen(false,false);following=null;tourClock=0;$('follow').textContent='Follow this resident';}}
   function manual(){setTour(false);following=null;$('follow').textContent='Follow this resident';}
-  function resetCamera(){manual();target.set(6,0,4);viewHeight=innerWidth<700?65:52;yaw=.76;elevation=.78;refreshProjection();}
-  function zoom(factor){manual();viewHeight=clamp(viewHeight*factor,20,100);refreshProjection();}
+  function resetCamera(){setHomeOpen(false,false);manual();target.set(6,0,4);viewHeight=innerWidth<700?65:52;yaw=.76;elevation=.78;refreshProjection();}
+  function zoom(factor){manual();viewHeight=clamp(viewHeight*factor,12,100);refreshProjection();}
   function pan(dx,dy){
     const units=viewHeight/Math.max(1,host.clientHeight),rightX=Math.cos(yaw),rightZ=-Math.sin(yaw),forwardX=Math.sin(yaw),forwardZ=Math.cos(yaw);
     target.x-=dx*units*rightX+dy*units/Math.sin(elevation)*forwardX;
     target.z-=dx*units*rightZ+dy*units/Math.sin(elevation)*forwardZ;
   }
+  function homeMeta(){return world.targets.find(t=>t.userData.selection.type==='building'&&t.userData.selection.lot?.furnished).userData.selection;}
+  function syncHomeUI(){
+    const isHome=selected?.lot?.furnished===true;
+    $('open-home').hidden=!isHome;$('open-home').textContent=world.home.isOpen?'Put the roof back':'Look inside';
+    $('open-home').setAttribute('aria-pressed',String(world.home.isOpen));
+    $('home-controls').hidden=!isHome||!world.home.isOpen;
+    const state=world.homeActivity.state;
+    const text={outside:'Luca is out for a walk. Invite them inside to try the sofa.',entering:'Luca is walking through the front gate and into the living room.',sitting:'Luca is relaxing on the sofa. The seat is now occupied.',leaving:'Luca is heading back to the sidewalk.'}[state]+(paused&&state!=='outside'?' The simulation is paused.':'');
+    if($('home-status').textContent!==text)$('home-status').textContent=text;
+    $('home-action').disabled=state==='entering'||state==='leaving';
+    $('home-action').textContent=state==='sitting'?'Send Luca outside':state==='entering'?'Luca is coming home':state==='leaving'?'Luca is heading out':'Ask Luca to sit';
+  }
+  function setHomeOpen(value,focus=true){
+    if(value===world.home.isOpen){syncHomeUI();return;}
+    world.home.setOpen(value);host.classList.toggle('home-view',value);
+    if(value){
+      manual();previousView={target:target.clone(),viewHeight,yaw,elevation};
+      yaw=.7;elevation=.94;viewHeight=innerWidth<700?35:19;
+      target.copy(world.home.origin);target.y=.8;
+      if(innerWidth<700){target.x+=Math.sin(yaw)*4.8;target.z+=Math.cos(yaw)*4.8;}
+    }else if(focus&&previousView){target.copy(previousView.target);viewHeight=previousView.viewHeight;yaw=previousView.yaw;elevation=previousView.elevation;}
+    if(!value)previousView=null;
+    refreshProjection();syncHomeUI();
+  }
   function choose(meta){
+    if(!meta||meta.type==='building'&&!meta.lot.furnished)setHomeOpen(false);
     selected=meta;following=null;setTour(false);$('follow').textContent='Follow this resident';
-    if(!meta){$('inspector').hidden=true;ring.visible=false;return;}
-    dismissWelcome();$('selection-type').textContent=meta.type==='resident'?'Around the neighborhood':meta.lot.kind==='park'?'A place to unwind':meta.lot.kind==='cafe'?"Jenn's neighborhood cafe":'A generated home';
+    if(!meta){$('inspector').hidden=true;ring.visible=false;syncHomeUI();return;}
+    dismissWelcome();$('selection-type').textContent=meta.type==='resident'?'Around the neighborhood':meta.lot.furnished?'The first furnished home':meta.lot.kind==='park'?'A place to unwind':meta.lot.kind==='cafe'?"Jenn's neighborhood cafe":'A generated home';
     $('selection-name').textContent=meta.name;$('selection-description').textContent=meta.description;$('follow').hidden=meta.type!=='resident';$('inspector').hidden=false;
-    ring.visible=meta.type==='resident';
+    ring.visible=meta.type==='resident';syncHomeUI();
+  }
+  function homeAction(){
+    if(paused){toast('Resume the simulation to let Luca walk.');return;}
+    const accepted=world.homeActivity.state==='sitting'?world.homeActivity.requestLeave():world.homeActivity.requestSit();
+    if(accepted)syncHomeUI();
   }
   function selectAt(x,y){
     const rect=canvas.getBoundingClientRect();pointer.set((x-rect.left)/rect.width*2-1,-(y-rect.top)/rect.height*2+1);
-    raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(world.targets,false)[0];choose(hit?hit.object.userData.selection:null);
+    raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(world.getTargets(),false)[0];
+    const meta=hit?.object.userData.selection;
+    if(meta?.type==='furniture'){choose(homeMeta());homeAction();}else choose(meta||null);
   }
   function setEvening(value){
     evening=value;$('evening').setAttribute('aria-pressed',String(value));$('time-label').textContent=value?'The evening is settling in':'A quiet afternoon';
@@ -75,13 +108,16 @@ export function start() {
     resetCamera();toast(`The neighborhood is ready. Its seed is ${seed}.`);
   }
   $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
+  $('visit-home').onclick=()=>{choose(homeMeta());setHomeOpen(true);};
+  $('open-home').onclick=()=>setHomeOpen(!world.home.isOpen);
+  $('home-action').onclick=homeAction;
   if(load('town.welcomeDismissed.v1')==='1')$('welcome').hidden=true;
   $('close-welcome').onclick=dismissWelcome;$('explore').onclick=()=>{dismissWelcome();canvas.focus({preventScroll:true});};
   $('help').onclick=()=>{$('seed').value=seed;$('help-dialog').showModal();keys.clear();};
   $('load-seed').onclick=()=>{loadWorld($('seed').value);$('help-dialog').close();};
   $('seed').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('load-seed').click();}});
   $('tour').onclick=()=>{dismissWelcome();setTour(!touring);};
-  $('pause').onclick=()=>{paused=!paused;$('pause').setAttribute('aria-pressed',String(paused));$('pause').innerHTML=paused?'<span aria-hidden="true">▷</span> Resume':'<span aria-hidden="true">Ⅱ</span> Pause';};
+  $('pause').onclick=()=>{paused=!paused;$('pause').setAttribute('aria-pressed',String(paused));$('pause').innerHTML=paused?'<span aria-hidden="true">▷</span> Resume':'<span aria-hidden="true">Ⅱ</span> Pause';syncHomeUI();};
   $('evening').onclick=()=>setEvening(!evening);
   $('zoom-in').onclick=()=>zoom(.82);$('zoom-out').onclick=()=>zoom(1.22);$('reset').onclick=resetCamera;
   $('new-town').onclick=()=>{const values=new Uint32Array(1);crypto.getRandomValues(values);loadWorld(values[0].toString(36));};
@@ -124,8 +160,8 @@ export function start() {
     if(keys.has('w')||keys.has('arrowup'))pan(0,move);if(keys.has('s')||keys.has('arrowdown'))pan(0,-move);
     if(keys.has('a')||keys.has('arrowleft'))pan(move,0);if(keys.has('d')||keys.has('arrowright'))pan(-move,0);
     if(keys.has('q'))yaw+=dt*.6;if(keys.has('e'))yaw-=dt*.6;
-    if(selected?.type==='resident') {const actor=world.residents[selected.index];ring.visible=true;ring.position.set(actor.root.position.x,.303,actor.root.position.z);if(frames%45===0)$('selection-description').textContent=actor.meta.description;}
-    updateCamera();renderer.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
+    if(selected?.type==='resident') {const actor=world.residents[selected.index];ring.visible=true;ring.position.set(actor.root.position.x,actor.root.position.y+.013,actor.root.position.z);if(frames%45===0)$('selection-description').textContent=actor.meta.description;}
+    updateCamera();world.home.update(camera,paused?0:dt,world.homeActivity.doorWanted());if(frames%8===0)syncHomeUI();renderer.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
   }
   document.addEventListener('visibilitychange',()=>{
     keys.clear();if(document.hidden){cancelAnimationFrame(raf);raf=0;}else if(!raf){last=performance.now();raf=requestAnimationFrame(frame);}
@@ -136,9 +172,19 @@ export function start() {
   window.townDebug={
     getStats:()=>({...world.stats,seed,frames,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
+    getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
+    selectHome:()=>choose(homeMeta()),
+    openHome:()=>{choose(homeMeta());setHomeOpen(true);},
+    sofaScreenPosition:()=>{const p=world.home.worldPoint(-3,.85,1.1).project(camera),r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};},
+    rotateHome:angle=>{yaw=angle;updateCamera();world.home.update(camera);},
     residentPosition:i=>world.residents[i].root.position.toArray(),
     residentScreenPosition:i=>{const p=world.residents[i].root.position.clone();p.y+=1;p.project(camera);const r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};},
     selectResident:i=>choose(world.residents[i].meta),
     loadSeed:loadWorld,
+  };
+  if(new URL(location.href).searchParams.has('test'))window.townDebug.advanceSimulation=seconds=>{
+    if(paused)return;const bounded=Math.min(120,Math.max(0,Number(seconds)||0));
+    for(let t=0;t<bounded;t+=.05)world.step(Math.min(.05,bounded-t));
+    syncHomeUI();
   };
 }

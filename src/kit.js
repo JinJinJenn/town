@@ -42,6 +42,19 @@ export function createKit() {
     water: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .32, metalness: .05 }),
     shadow: new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false, opacity: .38, polygonOffset: true, polygonOffsetFactor: -1 }),
   };
+  // Anti-aliased paint detail, not subpixel geometry casting dotted shadows.
+  materials.roof = materials.matte.clone();
+  materials.roof.onBeforeCompile = shader => {
+    shader.vertexShader = 'varying float vRoofU;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvRoofU = (position.x + 0.5) * 6.0;');
+    shader.fragmentShader = 'varying float vRoofU;\n' + shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      float roofAA = max(fwidth(vRoofU), 0.001);
+      float roofLine = 1.0 - smoothstep(0.014, 0.014 + roofAA * 1.4, abs(fract(vRoofU) - 0.5));
+      diffuseColor.rgb *= 1.0 - 0.085 * roofLine;
+    `);
+  };
+  materials.roof.customProgramCacheKey = () => 'town-roof-seams-v2';
   const color = new THREE.Color();
   const tint = (hex, amount) => '#' + color.set(hex).multiplyScalar(amount).getHexString();
   function group(parent, x=0, y=0, z=0, ry=0) {
@@ -189,9 +202,8 @@ export function createKit() {
     part(b,'gable',p.wall,[0,h,0],[w,rise,d]);
     const eave=w/2+.52, pitch=Math.atan2(rise,eave), span=Math.hypot(eave,rise);
     for(const side of [-1,1]) {
-      box(b,p.roof,[side*eave/2,h+rise/2+.07,0],[span+.14,.19,d+1.05],[0,0,-side*pitch]);
+      part(b,'box',p.roof,[side*eave/2,h+rise/2+.07,0],[span+.14,.19,d+1.05],[0,0,-side*pitch],'roof');
       for(const zz of [-d/2-.54,d/2+.54])box(b,p.trim,[side*eave/2,h+rise/2-.03,zz],[span+.2,.16,.14],[0,0,-side*pitch]);
-      for(let xx=.85;xx<eave;xx+=.92)box(b,tint(p.roof,.91),[side*xx,h+rise*(1-xx/eave)+.18,0],[.023,.025,d+1.05]);
     }
     box(b,tint(p.roof,1.04),[0,h+rise+.17,0],[.22,.17,d+1.15]);
     for(const xx of [-eave,eave])box(b,p.trim,[xx,h-.02,0],[.16,.2,d+1.08]);

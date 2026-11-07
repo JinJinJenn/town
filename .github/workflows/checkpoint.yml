@@ -2,7 +2,7 @@ name: Validate and package Town
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/checkpoint-02-interior]
     paths:
       - 'src/**'
       - 'tests/**'

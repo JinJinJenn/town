@@ -1,9 +1,12 @@
 import * as THREE from '../vendor/three.module.js';
 import { createPlan, rng, sidewalkPosition } from './plan.js';
+import {createHome} from './home.js';
+import {createHomeActivity} from './home-activity.js';
+import {HOME_ID} from './home-plan.js';
 
 export function createWorld(kit, seed) {
   const plan=createPlan(seed), root=kit.group(), actors=kit.group(), group=new THREE.Group();
-  const targets=[], residents=[], puffs=[];
+  const targets=[], residents=[], puffs=[];let home=null;
   const {box,part,ball,cyl}=kit;
   const pickMaterial=new THREE.MeshBasicMaterial({visible:false});
   function pick(parent,shape,p,s,meta) {
@@ -59,7 +62,7 @@ export function createWorld(kit, seed) {
     const garden=kit.group(g,0,.106,0);
     if(lot.kind==='park') park(garden,lot,r);
     else {
-      kit.building(garden,lot,r);
+      if(lot.id===HOME_ID){home=createHome(kit,lot);group.add(home.group);}else kit.building(garden,lot,r);
       kit.fence(garden,[-8.2,-8.2],[8.2,-8.2]);
       kit.fence(garden,[-8.2,-8.2],[-8.2,8.2]);kit.fence(garden,[8.2,-8.2],[8.2,8.2]);
       kit.fence(garden,[-8.2,8.2],[-1.2,8.2]);kit.fence(garden,[1.2,8.2],[8.2,8.2]);
@@ -74,7 +77,7 @@ export function createWorld(kit, seed) {
       // A working front path is kept clear of these decorations.
       kit.planter(garden,3.1,7.4,r,.9);kit.planter(garden,-3.1,7.4,r,.9);
       box(garden,'#a3aa8d',[2.0,.55,7.9],[.1,1.1,.1]);part(garden,'round','#c99799',[2,1.13,7.9],[.55,.38,.36]);
-      const description=lot.kind==='cafe'?"Jenn's cafe has a striped awning, outdoor tables, and a bicycle parked beside the window.":`This ${lot.floors===2?'two-storey house':'cottage'} combines a pitched roof, shuttered windows, a covered entrance, and a fenced garden.`;
+      const description=lot.furnished?'Clover Cottage has a furnished kitchen, living room, bedroom, and bathroom. Look inside and ask Luca to try the sofa.':lot.kind==='cafe'?"Jenn's cafe has a striped awning, outdoor tables, and a bicycle parked beside the window.":`This ${lot.floors===2?'two-storey house':'cottage'} combines a pitched roof, shuttered windows, a covered entrance, and a fenced garden.`;
       pick(garden,'box',[0,lot.height/2+1,-1],[lot.width,lot.height+2,lot.depth],{type:'building',name:lot.name,description,lot});
       if(lot.kind==='cafe') {
         garden.updateWorldMatrix(true,false);
@@ -92,11 +95,16 @@ export function createWorld(kit, seed) {
     const a=i/38*Math.PI*2, radius=61+rr()*5;
     kit.tree(root,Math.cos(a)*radius,Math.sin(a)*radius,rr,i%6===0,.9+rr()*.7);
   }
+  const homeActivity=createHomeActivity(home,residents[HOME_ID*2]);
+  const sofaRoot=kit.group(null,...home.origin.toArray());
+  pick(sofaRoot,'box',[-3,.9,1.1],[2.9,1.2,1.1],{type:'furniture',name:'Clover Cottage sofa',lot:home.lot});
+  sofaRoot.updateMatrixWorld(true);
   const staticBatch=kit.compile(root), dynamicBatch=kit.compile(actors,true);
   group.add(staticBatch.group,dynamicBatch.group);let elapsed=0;
   function step(dt) {
     elapsed+=dt;
     for(const r of residents) {
+      if(r===homeActivity.resident&&homeActivity.step(dt))continue;
       r.nextPause-=dt;
       if(r.nextPause<=0) {r.wait=1.5+r.random()*2;r.nextPause=12+r.random()*18;}
       r.wait=Math.max(0,r.wait-dt);const moving=r.wait===0;
@@ -121,9 +129,10 @@ export function createWorld(kit, seed) {
     dynamicBatch.update();
   }
   step(0);
-  return {group,plan,targets,residents,step,
+  return {group,plan,targets,residents,step,home,homeActivity,
+    getTargets:()=>targets.filter(t=>t.userData.selection.type==='furniture'?home.isOpen:!(t.userData.selection.lot?.furnished&&home.isOpen)),
     stats:{lots:plan.lots.length,residents:residents.length,staticBatches:staticBatch.batches.length,dynamicBatches:dynamicBatch.batches.length},
-    dispose(){staticBatch.dispose();dynamicBatch.dispose();pickMaterial.dispose();group.clear();}
+    dispose(){staticBatch.dispose();dynamicBatch.dispose();home.dispose();pickMaterial.dispose();group.clear();}
   };
 }
 
