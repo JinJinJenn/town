@@ -24,9 +24,16 @@ try{
   assert.equal((await page.evaluate(()=>townDebug.getStats())).version,9);
   return {page,errors};
  }
- async function click(page,id){const b=await page.evaluate(id=>townDebug.hud().controls.find(b=>b.id===id),id);assert.ok(b,`Missing GPU control ${id}`);await page.mouse.click(b.x+b.w/2,b.y+b.h/2);}
+ async function click(page,id){
+  await page.waitForFunction(id=>townDebug.hud().controls.some(b=>b.id===id),id,{timeout:30000});
+  const b=await page.evaluate(id=>townDebug.hud().controls.find(b=>b.id===id),id);assert.ok(b,`Missing GPU control ${id}`);
+  await page.mouse.click(b.x+b.w/2,b.y+b.h/2);
+  const frame=await page.evaluate(()=>townDebug.getStats().frames);
+  await page.waitForFunction(f=>townDebug.getStats().frames>f,frame,{timeout:30000});
+ }
  const {page,errors}=await open();
  const initial=await page.evaluate(()=>townDebug.getStats());assert.equal(initial.residents,32);assert.equal(initial.lots,16);assert.equal(initial.hudDrawCalls,1);assert.equal(initial.gpuHUD.glyphAtlasUploads,1);assert.ok(initial.live.inside>=6);assert.equal((await page.evaluate(()=>townDebug.getHome())).open,true);
+ report.cases.push({name:'desktop',initial,errors});
  await page.screenshot({path:`${out}/TownV9-live.png`});
  await click(page,'pause');await page.waitForFunction(()=>townDebug.getStats().paused);
  const paused=await page.evaluate(()=>townDebug.residents().map(r=>r.position));await page.waitForTimeout(350);assert.deepEqual(await page.evaluate(()=>townDebug.residents().map(r=>r.position)),paused);
@@ -37,7 +44,7 @@ try{
  await click(page,'menu');await page.waitForFunction(()=>townDebug.hud().menu==='options');await click(page,'palette');assert.notEqual((await page.evaluate(()=>townDebug.getStats())).palette,initial.palette);await click(page,'close');
  await click(page,'roster');await page.waitForFunction(()=>townDebug.hud().menu==='residents');await click(page,'resident:2');await click(page,'follow');await page.waitForFunction(()=>townDebug.getStats().following===2);
  await page.keyboard.press('h');await page.waitForFunction(()=>townDebug.getStats().following===null);await page.keyboard.press('1');
- assert.deepEqual(errors,[]);report.cases.push({name:'desktop',initial,final:await page.evaluate(()=>townDebug.getStats()),errors});
+ assert.deepEqual(errors,[]);report.cases[0].final=await page.evaluate(()=>townDebug.getStats());report.cases[0].passed=true;
  await page.close();
  if(!live){
   for(const width of[390,320,820]){
