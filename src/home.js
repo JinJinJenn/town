@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.module.js';
+import {dressV7Home} from './v7-polish.js';
 import {dressV5Home} from './v5-look.js';
 import {dressHome, COTTAGE_PALETTES, paletteRole} from './home-polish.js';
 import {FLOOR_Y, HOME_SEAT, ROOMS} from './home-plan.js';
@@ -135,6 +136,7 @@ export function createHome(kit, lot) {
   box(bath,'#9fbdad',[3.1,floor+.04,3.2],[.85,.04,1.4]);plant(bath,3.1,floor+.97,3.9,.6);
   dressHome(kit,{inside,wallRoots,lot,floor});
   dressV5Home(kit,{inside,wallRoots,lot,floor});
+  if(kit.artVersion==='07-cottage-detail')dressV7Home(kit,{inside,wallRoots,lot,floor});
   inside.traverse(m=>{if(m.userData.part)m.userData.paletteRole??=paletteRole(m.userData.color.getHexString());});
   source.updateMatrixWorld(true);
   const batches={};

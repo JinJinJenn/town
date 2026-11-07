@@ -1,4 +1,5 @@
-import {createMediaLibrary,mountIllustratedLayers} from './v6-media.js';
+import {createMediaLibrary,mountIllustratedLayers} from './v7-media.js';
+import {optimizeV7Kit} from './v7-polish.js';
 import {enhanceV5Kit, V5_STYLE} from './v5-look.js';
 import {enhanceV4Kit, createPetals} from './v4-world.js';
 import {mountV4UI} from './v4-ui.js';
@@ -19,8 +20,9 @@ export function start() {
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(0,0,-2), kit=enhanceV5Kit(enhanceV4Kit(enhanceKit(createKit())));
+  const target=new THREE.Vector3(0,0,-2), kit=optimizeV7Kit(enhanceV5Kit(enhanceV4Kit(enhanceKit(createKit()))));
   const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
+  renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;let lastShadow=0,lastWallMask='';
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
   let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
   let ui=null;
@@ -49,7 +51,7 @@ export function start() {
     const radius=115,horizontal=Math.cos(elevation)*radius;
     camera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(elevation)*radius,target.z+Math.cos(yaw)*horizontal);camera.lookAt(target);camera.updateMatrixWorld();
   }
-  function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,innerWidth<700?1.25:1.5));renderer.setSize(host.clientWidth,host.clientHeight,false);refreshProjection();}
+  function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio||1,innerWidth<700?1:1.5));renderer.setSize(host.clientWidth,host.clientHeight,false);refreshProjection();}
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);resize();updateCamera();
   function setTour(value){touring=value;$('tour').setAttribute('aria-pressed',String(value));if(value){setHomeOpen(false,false);following=null;tourClock=0;$('follow').textContent='Follow this resident';}}
   function manual(){setTour(false);following=null;$('follow').textContent='Follow this resident';}
@@ -107,15 +109,15 @@ export function start() {
   }
   function setEvening(value){
     evening=value;$('evening').setAttribute('aria-pressed',String(value));$('time-label').textContent=value?'The evening is settling in':'A quiet afternoon';
-    lighting.apply(value);media?.setEvening(value);
+    lighting.apply(value);media?.setEvening(value);renderer.shadowMap.needsUpdate=true;
   }
   function loadWorld(value){
     seed=cleanSeed(value);choose(null);scene.remove(world.group);media?.dispose();media=null;world.dispose();world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,ui?.petals??true);ui?.resetWorld();if(mediaLibrary.status!=='loading')attachMedia();
     $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
     try{const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState(null,'',url);}catch{}
-    resetCamera();toast(`The neighborhood is ready. Its seed is ${seed}.`);
+    resetCamera();choose(homeMeta());setHomeOpen(true);renderer.shadowMap.needsUpdate=true;toast(`The neighborhood is ready. Its seed is ${seed}.`);
   }
-  $('soft-rendering').checked=compositor.supported&&load('town.softRendering.v1')!=='0';
+  $('soft-rendering').checked=compositor.supported&&(load('town.softRendering.v1')===null?innerWidth>=700:load('town.softRendering.v1')!=='0');
   $('soft-rendering').disabled=!compositor.supported;
   if(!compositor.supported)$('soft-rendering').title='This device uses the standard renderer because floating-point render targets are unavailable.';
   compositor.setEnabled($('soft-rendering').checked);
@@ -179,16 +181,20 @@ export function start() {
     if(keys.has('a')||keys.has('arrowleft'))pan(move,0);if(keys.has('d')||keys.has('arrowright'))pan(-move,0);
     if(keys.has('q'))yaw+=dt*.6;if(keys.has('e'))yaw-=dt*.6;
     if(selected?.type==='resident') {const actor=world.residents[selected.index];ring.visible=true;ring.position.set(actor.root.position.x,actor.root.position.y+.013,actor.root.position.z);if(frames%45===0)$('selection-description').textContent=actor.meta.description;}
-    updateCamera();world.home.update(camera,paused?0:dt,world.homeActivity.doorWanted());if(frames%8===0)syncHomeUI();compositor.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
+    updateCamera();world.home.update(camera,paused?0:dt,world.homeActivity.doorWanted());if(frames%8===0)syncHomeUI();
+    const wallMask=String(world.home.isOpen)+Object.values(world.home.visibleWalls()).join('');
+    if(wallMask!==lastWallMask||(!paused&&now-lastShadow>=100)){renderer.shadowMap.needsUpdate=true;lastShadow=now;lastWallMask=wallMask;}
+    compositor.render(scene,camera);frames++;raf=requestAnimationFrame(frame);
   }
   document.addEventListener('visibilitychange',()=>{
     keys.clear();if(document.hidden){cancelAnimationFrame(raf);raf=0;}else if(!raf){last=performance.now();raf=requestAnimationFrame(frame);}
   });
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;toast('The graphics context was interrupted. Reload the page to restart the neighborhood.');});
+  choose(homeMeta());setHomeOpen(true);updateCamera();world.home.update(camera);
   compositor.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
   // Small inspection API for regression tests and future performance work.
   window.townDebug={
-    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:6,mixedMedia:media?.info()??{status:mediaLibrary.status,cards:0,enabled:illustrated},colorStyle:V5_STYLE,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
+    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:7,shadowRefreshHz:10,pixelRatio:renderer.getPixelRatio(),mixedMedia:media?.info()??{status:mediaLibrary.status,cards:0,enabled:illustrated},colorStyle:V5_STYLE,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
     getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
     selectHome:()=>choose(homeMeta()),
