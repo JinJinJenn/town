@@ -4,14 +4,14 @@ const frame=async(page)=>{const n=await page.evaluate(()=>townDebug.getStats().f
 async function boot(page,light=false){
   if(light)await page.addInitScript(()=>localStorage.setItem('town.softRendering.v1','0'));
   await page.goto('/town/?seed=petalwood&test=1');
-  await page.waitForFunction(()=>window.townDebug?.getStats().version===4,null,{timeout:90000});
+  await page.waitForFunction(()=>window.townDebug?.getStats().version>=4,null,{timeout:90000});
   await expect(page.locator('#error')).toBeHidden();await frame(page);
 }
 test('V4 pink UI and dressed cottage render through the production compositor',async({page})=>{
   test.setTimeout(300000);await mkdir('artifacts-v4',{recursive:true});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.setViewportSize({width:1280,height:800});await boot(page);
-  await expect(page).toHaveTitle('Town V4 · JinJinJenn');
+  await expect(page).toHaveTitle(/Town V[45] · JinJinJenn/);
   expect(await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('gradient');
   await page.screenshot({path:'artifacts-v4/TownV4-welcome.png'});
   await page.locator('#visit-home').click();await frame(page);await page.locator('#pause').click();
@@ -38,7 +38,7 @@ test('V4 palettes persist, neighbors can be followed, photo mode exits, and sofa
   await page.locator('#photo').click();expect((await page.evaluate(()=>townDebug.getStats())).photoMode).toBe(true);
   await page.keyboard.press('Escape');expect((await page.evaluate(()=>townDebug.getStats())).photoMode).toBe(false);
   await page.evaluate(()=>townDebug.loadSeed('rose'));expect((await page.evaluate(()=>townDebug.getStats())).palette).toBe('sage');
-  await page.reload();await page.waitForFunction(()=>window.townDebug?.getStats().version===4);expect((await page.evaluate(()=>townDebug.getStats())).palette).toBe('sage');
+  await page.reload();await page.waitForFunction(()=>window.townDebug?.getStats().version>=4);expect((await page.evaluate(()=>townDebug.getStats())).palette).toBe('sage');
   await page.locator('#visit-home').click();await page.locator('[data-palette="blossom"]').click();expect(errors).toEqual([]);
 });
 for(const width of [390,320])test(`V4 controls fit a ${width}px phone without covering one another`,async({page})=>{

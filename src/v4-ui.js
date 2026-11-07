@@ -28,10 +28,10 @@ export function mountV4UI(api){
   for(const [id,palette] of Object.entries(COTTAGE_PALETTES)){
     const button=document.createElement('button');button.type='button';button.className='palette-choice';button.dataset.palette=id;button.setAttribute('aria-label',palette.label);button.title=palette.label;
     const dot=document.createElement('span');dot.style.background=`linear-gradient(135deg, ${palette.sofa} 50%, ${palette.quilt} 50%)`;button.append(dot,document.createTextNode(palette.label));
-    button.onclick=()=>{if(api.home().setPalette(id)){save('town.palette.v4',id);syncPalette();}};swatches.append(button);
+    button.onclick=()=>{if(api.home().setPalette(id)){save('town.palette.v5',id);syncPalette();}};swatches.append(button);
   }
   function syncPalette(){for(const b of swatches.children)b.setAttribute('aria-pressed',String(b.dataset.palette===api.home().palette));}
-  function restorePalette(){api.home().setPalette(read('town.palette.v4')||'blossom');syncPalette();}
+  function restorePalette(){api.home().setPalette(read('town.palette.v5')||'roseMint');syncPalette();}
   function setPhoto(value){
     photo=!!value;document.body.classList.toggle('photo-mode',photo);$('exit-photo').hidden=!photo;
     $('photo').setAttribute('aria-pressed',String(photo));

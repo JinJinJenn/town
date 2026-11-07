@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.module.js';
+import {dressV5Home} from './v5-look.js';
 import {dressHome, COTTAGE_PALETTES, paletteRole} from './home-polish.js';
 import {FLOOR_Y, HOME_SEAT, ROOMS} from './home-plan.js';
 
@@ -133,7 +134,8 @@ export function createHome(kit, lot) {
   rounded(bath,'#e9e6d9',[2.05,floor+.27,1.75],[.55,.5,.76]);part(bath,'ring','#f6f1e5',[2.05,floor+.55,1.85],[.56,.68,.56],[-Math.PI/2,0,0]);rounded(bath,'#f0eadd',[2.05,floor+.7,1.39],[.59,.6,.23]);
   box(bath,'#9fbdad',[3.1,floor+.04,3.2],[.85,.04,1.4]);plant(bath,3.1,floor+.97,3.9,.6);
   dressHome(kit,{inside,wallRoots,lot,floor});
-  inside.traverse(m=>{if(m.userData.part)m.userData.paletteRole=paletteRole(m.userData.color.getHexString());});
+  dressV5Home(kit,{inside,wallRoots,lot,floor});
+  inside.traverse(m=>{if(m.userData.part)m.userData.paletteRole??=paletteRole(m.userData.color.getHexString());});
   source.updateMatrixWorld(true);
   const batches={};
   for(const [key,root] of Object.entries({base,inside,roof,...wallRoots,door:doorRoot})){
@@ -151,7 +153,7 @@ export function createHome(kit, lot) {
     const next=THREE.MathUtils.lerp(doorAngle,wanted,1-Math.exp(-dt*8));
     if(Math.abs(next-doorAngle)>.0001){doorAngle=next;door.rotation.y=next;batches.door.update();}
   }
-  let palette='blossom';
+  let palette='roseMint';
   function setPalette(value){
     if(!Object.hasOwn(COTTAGE_PALETTES,value))return false;
     palette=value;const colors=COTTAGE_PALETTES[value];
@@ -163,7 +165,7 @@ export function createHome(kit, lot) {
     return true;
   }
   setPalette(palette);setOpen(false);
-  return {group:model,origin,lot,setPalette,get palette(){return palette;},polishVersion:4,rooms:ROOMS,seat:HOME_SEAT,get isOpen(){return open;},setOpen,update,
+  return {group:model,origin,lot,setPalette,get palette(){return palette;},polishVersion:5,rooms:ROOMS,seat:HOME_SEAT,get isOpen(){return open;},setOpen,update,
     worldPoint(x,y,z){return new THREE.Vector3(x,y,z).add(origin);},
     visibleWalls:()=>Object.fromEntries(Object.keys(wallRoots).map(k=>[k,batches[k].group.visible])),
     dispose(){Object.values(batches).forEach(b=>b.dispose());model.clear();},

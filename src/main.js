@@ -1,3 +1,4 @@
+import {enhanceV5Kit, V5_STYLE} from './v5-look.js';
 import {enhanceV4Kit, createPetals} from './v4-world.js';
 import {mountV4UI} from './v4-ui.js';
 import { enhanceKit } from './art.js';
@@ -17,7 +18,7 @@ export function start() {
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(0,0,-2), kit=enhanceV4Kit(enhanceKit(createKit()));
+  const target=new THREE.Vector3(0,0,-2), kit=enhanceV5Kit(enhanceV4Kit(enhanceKit(createKit())));
   const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
   let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -180,7 +181,7 @@ export function start() {
   compositor.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
   // Small inspection API for regression tests and future performance work.
   window.townDebug={
-    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:4,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
+    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:5,colorStyle:V5_STYLE,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
     getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
     selectHome:()=>choose(homeMeta()),

@@ -12,7 +12,7 @@ test('the concept-art renderer works in both quality modes without changing the 
   await page.waitForFunction(()=>window.townDebug?.getStats().frames>2,null,{timeout:90000});
   await page.locator('#explore').click();await page.locator('#pause').click();await frames(page);
   const initial=await page.evaluate(()=>townDebug.getStats());
-  expect(initial.artVersion).toBe('03-pastel-gardens');expect(initial.softRendering).toBe(true);
+  expect(['03-pastel-gardens','05-rose-mint']).toContain(initial.artVersion);expect(initial.softRendering).toBe(true);
   expect(initial.compositeCalls).toBe(1);expect(initial.triangles).toBeGreaterThan(10000);
   await page.screenshot({path:'artifacts/Town03-neighborhood.png'});
   const clean=await page.addStyleTag({content:'#world > :not(canvas){visibility:hidden!important}'});

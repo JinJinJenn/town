@@ -6,7 +6,7 @@
 .card,dialog{background:linear-gradient(145deg,#fffaf3fa,#ffeaf4fa);border-color:#e99cbd;box-shadow:0 0 0 4px #fff3edcc,0 15px 45px #71314e35}
 .card p,dialog p{color:#744057}.card h1,.card h2,dialog h2{color:#7b254e}.card h1 em{color:#c43b7c}
 .eyebrow{color:#9d426a}.brand-flower,.welcome-flower{color:#e85d9d}.welcome-flower{opacity:.85}
-.primary{background:linear-gradient(130deg,#52942e,#34731f);border-color:#397820;color:#fffef6;box-shadow:inset 0 1px #ffffff55,0 3px 9px #3a702d30}
+.primary{background:linear-gradient(130deg,#438321,#34731f);border-color:#397820;color:#fffef6;box-shadow:inset 0 1px #ffffff55,0 3px 9px #3a702d30}
 .primary:hover{filter:brightness(1.06)}.primary:disabled{filter:none}
 .secondary{background:linear-gradient(#fff3f8,#ffcfe3);border-color:#e78db7;color:#922557}
 .round,.home-shortcut{color:#9a265e;border-color:#eb9bbe;background:#ffedf5f5}
