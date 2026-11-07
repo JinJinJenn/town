@@ -43,7 +43,9 @@ export function createHousehold(world){
     if(a.slot?.activity!=='talk'||a.route.length||a.settle>0)return;
     const gid=a.slot.group??a.slot.pair,members=agents.filter(b=>b.slot?.activity==='talk'&&(b.slot.group??b.slot.pair)===gid&&!b.route.length&&b.settle<=0);
     if(members.length<2)return;
-    const ids=members.map(b=>b.index).sort((x,y)=>x-y),signature=ids.join(',');
+    const ids=members.map(b=>b.index).sort((x,y)=>x-y),pendingTarget=members.some(b=>b.activeCommand?.kind==='talk'&&Number.isInteger(b.activeCommand.targetIndex)&&!ids.includes(b.activeCommand.targetIndex));
+    if(pendingTarget)return;
+    const signature=ids.join(',');
     if(socialSignatures.get(gid)!==signature){socialSignatures.set(gid,signature);socialStarts.set(gid,time);conversations++;}
     const cx=members.reduce((s,b)=>s+b.pos.x,0)/members.length,cz=members.reduce((s,b)=>s+b.pos.z,0)/members.length,start=socialStarts.get(gid)??time;
     for(const b of members){b.socialGroup=[...ids];const k=ids.indexOf(b.index),ownTarget=b.activeCommand?.kind==='talk'&&Number.isInteger(b.activeCommand.targetIndex)&&ids.includes(b.activeCommand.targetIndex)?b.activeCommand.targetIndex:null,inviter=members.find(m=>m.activeCommand?.kind==='talk'&&m.activeCommand.targetIndex===b.index),preferred=ownTarget??inviter?.index??null;b.partner=preferred??ids[(k+1)%ids.length];b.conversationStart=start;b.dwell=Math.max(b.dwell,60+random()*20);b.state='talking';b.face=Math.atan2(cx-b.pos.x,cz-b.pos.z);if(b.activeCommand?.kind==='talk'&&ids.includes(b.activeCommand.targetIndex))b.activeCommand.conversed=true;}
