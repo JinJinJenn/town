@@ -75,11 +75,11 @@ export function dressV7Home(kit,{inside,wallRoots,lot,floor}){
     }
     if(key==='right'){
       // Bath mirror and towels belong to this wall, not the invisible wall space.
-      round(wall,'#c39a6c',[-2.75,2.35,.18],[1.05,1.3,.07]);
-      box(wall,'#b4d9d7',[-2.75,2.35,.23],[.88,1.12,.025]);
-      box(wall,'#e9faf2',[-2.93,2.35,.25],[.06,.96,.01],[0,0,-.3]);
-      beam(wall,'#b89a65',[-1.55,1.94,.25],[-.55,1.94,.25],.035);
-      for(let i=0;i<3;i++)round(wall,i%2?'#d0e4bb':'#efb9d0',[-1.4+i*.28,1.66,.3],[.25,.53,.055]);
+      round(wall,'#c39a6c',[2.75,2.35,.18],[1.05,1.3,.07]);
+      box(wall,'#b4d9d7',[2.75,2.35,.23],[.88,1.12,.025]);
+      box(wall,'#e9faf2',[2.57,2.35,.25],[.06,.96,.01],[0,0,-.3]);
+      beam(wall,'#b89a65',[.55,1.94,.25],[1.55,1.94,.25],.035);
+      for(let i=0;i<3;i++)round(wall,i%2?'#d0e4bb':'#efb9d0',[.7+i*.28,1.66,.3],[.25,.53,.055]);
     }
   }
   // Textiles: fringe and woven lines sit above existing rugs rather than fighting them.
@@ -174,15 +174,15 @@ export function enhanceV7Kit(kit){
       part(g,'roseFlower',i%2?'#f5b0d0':'#e969a8',[x,.91,8.1],[.35,.35,.35],[.4,i,.35],'cloth');
     }
     // Garden lanterns use emissive materials, not dozens of costly point lights.
-    for(const x of [-2.3,2.3,-7.55,7.55]){
-      const z=Math.abs(x)<3?7.48:4.4;
+    for(const x of [-7.55,7.55]){
+      const z=4.4;
       cyl(g,'#9b7457',[x,.47,z],[.07,.94,.07]);
       box(g,'#efcd89',[x,1.02,z],[.22,.29,.22],[0,0,0]);
       part(g,'box','#ffdf9e',[x,1.03,z],[.18,.24,.18],[0,0,0],'lantern');
       part(g,'cone','#92654f',[x,1.23,z],[.36,.17,.36]);
     }
     // A pair of raised herb beds occupy the rear garden margins, not the house.
-    for(const x of [-3.6,3.6]){
+    for(const x of [-3.6,-1.1]){
       box(g,'#bd916b',[x,.19,-7.55],[1.8,.38,.63]);box(g,'#695e46',[x,.39,-7.55],[1.65,.04,.5]);
       for(let j=0;j<6;j++)part(g,'leaf',j%2?'#89b868':'#58a46d',[x-.66+j*.26,.56,-7.55],[.3,.32,.32]);
     }
