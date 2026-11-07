@@ -37,7 +37,9 @@ try{
  await p.keyboard.press('x');await frame(p);assert.equal((await p.evaluate(()=>townDebug.commands())).length,0);
  const selected=await p.evaluate(()=>townDebug.selected());await p.keyboard.press('Space');await frame(p);assert.equal(await p.evaluate(()=>townDebug.selected()),(selected+1)%32);assert.equal((await p.evaluate(()=>townDebug.getStats())).speed,0);
  await click(p,'roster');await click(p,'resident:20');
- await ground(p,-1.2,2.9);await p.keyboard.press('Escape');await frame(p);assert.equal((await p.evaluate(()=>townDebug.hud())).context,null);
+ // The original arrival point is now occupied by Luca in the natural-time run.
+ // A click there correctly selects the resident, so reopen on the clear bedroom floor.
+ await ground(p,2.8,-.6);await p.keyboard.press('Escape');await frame(p);assert.equal((await p.evaluate(()=>townDebug.hud())).context,null);
  assert.deepEqual(errors,[]);desktop.final=await p.evaluate(()=>townDebug.getStats());desktop.passed=true;await p.close();
  if(!live){
   for(const width of [390,320]){const {p,errors}=await open(width,700);await click(p,'pause',true);await ground(p,-1.2,2.9,true);await click(p,'go',true);const q=await p.evaluate(()=>townDebug.commands());assert.equal(q.length,1);await capture(p,`TownV11-${width}`);for(const b of await p.evaluate(()=>townDebug.hud().controls))assert.ok(b.x>=0&&b.y>=0&&b.x+b.w<=width+1&&b.y+b.h<=701,`Bounds ${b.id}`);await click(p,'cancel:'+q[0].id,true);assert.equal((await p.evaluate(()=>townDebug.commands())).length,0);assert.deepEqual(errors,[]);report.cases.push({name:`touch-${width}`,stats:await p.evaluate(()=>townDebug.getStats()),passed:true});await p.close();}
