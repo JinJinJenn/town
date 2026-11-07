@@ -1,0 +1,33 @@
+import {test,expect} from '@playwright/test';
+import {mkdir,writeFile} from 'node:fs/promises';
+const frames=async(page,n=2)=>{
+  const f=await page.evaluate(()=>townDebug.getStats().frames);
+  await page.waitForFunction(({f,n})=>townDebug.getStats().frames>=f+n,{f,n},{timeout:45000});
+};
+test('the concept-art renderer works in both quality modes without changing the town',async({page})=>{
+  test.setTimeout(240000);await mkdir('artifacts',{recursive:true});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  await page.goto('/town/?seed=petalwood&test=1');
+  await page.waitForFunction(()=>window.townDebug?.getStats().frames>2,null,{timeout:90000});
+  await page.locator('#explore').click();await page.locator('#pause').click();await frames(page);
+  const initial=await page.evaluate(()=>townDebug.getStats());
+  expect(initial.artVersion).toBe('03-pastel-gardens');expect(initial.softRendering).toBe(true);
+  expect(initial.compositeCalls).toBe(1);expect(initial.triangles).toBeGreaterThan(10000);
+  await page.screenshot({path:'artifacts/Town03-neighborhood.png'});
+  const clean=await page.addStyleTag({content:'#world > :not(canvas){visibility:hidden!important}'});
+  await page.locator('#scene').screenshot({path:'artifacts/Town03-world.png'});await clean.evaluate(e=>e.remove());
+  const plan=await page.evaluate(()=>townDebug.getPlan());
+  await page.locator('#help').click();await page.locator('#soft-rendering').uncheck();
+  await page.locator('[aria-label="Close help"]').click();await frames(page);
+  expect((await page.evaluate(()=>townDebug.getStats())).softRendering).toBe(false);
+  await page.screenshot({path:'artifacts/Town03-simple-rendering.png'});
+  expect(await page.evaluate(()=>townDebug.getPlan())).toEqual(plan);
+  await page.locator('#help').click();await page.locator('#soft-rendering').check();
+  await page.locator('[aria-label="Close help"]').click();await frames(page);
+  await page.locator('#visit-home').click();await frames(page);
+  expect((await page.evaluate(()=>townDebug.getHome())).open).toBe(true);
+  await page.screenshot({path:'artifacts/Town03-cottage.png'});
+  const final=await page.evaluate(()=>townDebug.getStats());expect(errors).toEqual([]);
+  await writeFile('artifacts/art-validation.json',JSON.stringify({initial,final,errors,notes:'Real WebGL via software Chromium. Screenshots need visual review; not a hardware FPS benchmark.'},null,2));
+});

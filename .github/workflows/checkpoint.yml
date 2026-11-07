@@ -2,7 +2,7 @@ name: Validate and package Town
 
 on:
   push:
-    branches: [main, feat/checkpoint-02-interior]
+    branches: [main, feat/checkpoint-02-interior, feat/checkpoint-03-concept-art]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install pinned dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: Prepare the offline renderer
         run: npm run vendor
       - name: Check JavaScript and deterministic generation
@@ -41,8 +41,18 @@ jobs:
           npm test
       - name: Install the browser
         run: npx playwright install --with-deps chromium
+      - name: Verify the concept-art renderer
+        run: npx playwright test tests/browser/00-art.spec.js
+      - name: Save the visual review before longer interaction tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-art-preview
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Verify rendering, controls, and mobile layout
-        run: npm run test:browser
+        run: npx playwright test tests/browser/home.spec.js tests/browser/town.spec.js
       - name: Package source and test evidence even when a check fails
         if: always()
         shell: bash
