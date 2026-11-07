@@ -1,0 +1,13 @@
+/* Keep the open-house inspector below the view; override legacy :has() specificity. */
+#world.home-view #inspector{top:auto;bottom:110px;padding:21px 24px;max-height:calc(100% - 174px)}
+#world.home-view #inspector .property-emblem{display:none}
+#world.home-view #inspector .eyebrow{margin:3px 0 10px!important}
+#world.home-view #inspector #selection-description{font-size:12px;line-height:1.6;margin-bottom:13px}
+#world.home-view #inspector #home-controls .small{display:none}
+#world.home-view #inspector #cottage-style{margin-top:14px}
+@media(max-width:700px){
+ #world.home-view #inspector{top:auto;bottom:86px;left:12px;right:12px;padding:14px 17px;max-height:268px}
+ #world.home-view #inspector #selection-description,#world.home-view #inspector .eyebrow{display:none}
+ #world.home-view #inspector #cottage-style{margin-top:9px}
+}
+@media(max-width:370px){#world.home-view #inspector{padding:12px 15px;max-height:250px}}
