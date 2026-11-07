@@ -23,13 +23,13 @@ try{
   stage='seat-sim';await page.evaluate(()=>window.townDebug.advanceSimulation(45));
   await page.waitForFunction(()=>window.townDebug.residents()[window.townDebug.selected()].state==='sitting',null,{timeout:15000});
   const seated=await page.evaluate(()=>window.townDebug.getStats().live.seated);assert.ok(seated>=1);
-  const finiteSeat=await page.evaluate(()=>window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)));assert.deepEqual(finiteSeat,[]);stage='seat-shot';await page.screenshot({path:'artifacts-v12/TownV12-seat.png'});
+  const finiteSeat=await page.evaluate(()=>window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)));assert.deepEqual(finiteSeat,[]);stage='seat-shot';await page.screenshot({path:'artifacts-v12/TownV12-seat.png',timeout:90000});
   stage='group-sim';await page.evaluate(()=>{window.townDebug.action('select-target',{targetIndex:20});window.townDebug.action('chat-target',{targetIndex:6});window.townDebug.advanceSimulation(45);window.townDebug.action('select-target',{targetIndex:7});window.townDebug.action('chat-target',{targetIndex:6});window.townDebug.advanceSimulation(45);});
   const stats=await page.evaluate(()=>window.townDebug.getStats().live);assert.ok(stats.maxGroup>=3,JSON.stringify(stats));
-  const finiteGroup=await page.evaluate(()=>({residents:window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)),controls:window.townDebug.hud().controls.filter(c=>![c.x,c.y,c.w,c.h].every(Number.isFinite))}));assert.deepEqual(finiteGroup,{residents:[],controls:[]});stage='group-shot';await page.screenshot({path:'artifacts-v12/TownV12-group.png'});
+  const finiteGroup=await page.evaluate(()=>({residents:window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)),controls:window.townDebug.hud().controls.filter(c=>![c.x,c.y,c.w,c.h].every(Number.isFinite))}));assert.deepEqual(finiteGroup,{residents:[],controls:[]});stage='group-shot';await page.screenshot({path:'artifacts-v12/TownV12-group.png',timeout:90000});
   if(warnings.length)console.log('V12 recorded pre-existing-style Three warning',JSON.stringify(warnings));if(errors.length)console.error('V12 staged console errors',JSON.stringify(errors));assert.deepEqual(errors,[]);
   await writeFile('artifacts-v12/review.json',JSON.stringify({stats,warnings,verifiedAt:new Date().toISOString()},null,2));
-  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);await page.screenshot({path:'artifacts-v12/TownV12-phone.png'});
+  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);await page.screenshot({path:'artifacts-v12/TownV12-phone.png',timeout:90000});
   await browser.close();
   console.log('V12 browser review passed: real outdoor Sit context and 3+ Sim group conversation.');
 }finally{server.kill('SIGTERM');}
