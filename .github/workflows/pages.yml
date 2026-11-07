@@ -9,7 +9,7 @@ on:
       - 'index.html'
       - 'style.css'
       - 'package*.json'
-      - 'tools/vendor.mjs'
+      - 'tools/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -21,9 +21,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  publish:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pages: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +42,7 @@ jobs:
         run: |
           for file in src/*.js tools/*.mjs; do node --check "$file"; done
           npm test
-      - name: Stage the public game, not the development repository
+      - name: Stage the public game with a deployment manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -65,39 +69,39 @@ jobs:
           await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.GITHUB_SHA, files }, null, 2));
           console.log(`Prepared ${Object.keys(files).length} public files with same-origin renderer imports.`);
           NODE
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Check Pages configuration
-        uses: actions/configure-pages@v5
-      - name: Publish the game
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish built files to the configured source branch
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          publish_dir="$RUNNER_TEMP/town-public"
+          git worktree add --detach "$publish_dir" FETCH_HEAD
+          rsync -a --delete --exclude='.git' _site/ "$publish_dir/"
+          git -C "$publish_dir" config user.name 'github-actions[bot]'
+          git -C "$publish_dir" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$publish_dir" add --all
+          if ! git -C "$publish_dir" diff --cached --quiet; then
+            git -C "$publish_dir" commit -m "deploy: Town from $GITHUB_SHA"
+            git -C "$publish_dir" push origin HEAD:gh-pages
+          fi
+          echo "commit=$(git -C "$publish_dir" rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Request the native Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"
       - name: Verify the published commit and every runtime file
         env:
-          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+          SITE_URL: https://jinjinjenn.github.io/town/
           EXPECTED_COMMIT: ${{ github.sha }}
         run: |
           node --input-type=module <<'NODE'
           import { createHash } from 'node:crypto';
           import assert from 'node:assert/strict';
+          import { mkdir, writeFile } from 'node:fs/promises';
           import { setTimeout as sleep } from 'node:timers/promises';
           const base = new URL(process.env.SITE_URL);
-          if (!base.pathname.endsWith('/')) base.pathname += '/';
           async function get(file) {
             const url = new URL(file, base);
             url.searchParams.set('deployment', process.env.EXPECTED_COMMIT);
@@ -105,7 +109,7 @@ jobs:
             assert.equal(response.status, 200, `${url.pathname}: HTTP ${response.status}`);
             return Buffer.from(await response.arrayBuffer());
           }
-          for (let attempt = 0; attempt < 12; attempt++) {
+          for (let attempt = 0; attempt < 30; attempt++) {
             try {
               const manifest = JSON.parse((await get('__deployment.json')).toString());
               assert.equal(manifest.commit, process.env.EXPECTED_COMMIT, 'The public site is serving an older deployment.');
@@ -113,16 +117,63 @@ jobs:
                 const bytes = await get(file);
                 assert.equal(createHash('sha256').update(bytes).digest('hex'), hash, `Published file differs from build: ${file}`);
               }
+              await mkdir('artifacts', { recursive: true });
+              await writeFile('artifacts/live-files.json', JSON.stringify({ url: base.href, commit: manifest.commit, verifiedFiles: Object.keys(manifest.files), verifiedAt: new Date().toISOString() }, null, 2));
               console.log(`Verified ${base.href} at ${manifest.commit}: all ${Object.keys(manifest.files).length} published files match the build.`);
               break;
             } catch (error) {
-              if (attempt === 11) throw error;
+              if (attempt === 29) throw error;
               console.log(`Waiting for the public deployment: ${error.message}`);
               await sleep(5000);
             }
           }
           NODE
-      - name: Explain the one-time Pages setting if deployment fails
-        if: failure()
+      - name: Install the live verification browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify real 3D rendering and cottage controls on the public site
+        env:
+          SITE_URL: https://jinjinjenn.github.io/town/
         run: |
-          echo 'If Pages is not enabled, open https://github.com/JinJinJenn/town/settings/pages and select GitHub Actions under Build and deployment > Source, then re-run this workflow.' >> "$GITHUB_STEP_SUMMARY"
+          node --input-type=module <<'NODE'
+          import { chromium } from '@playwright/test';
+          import assert from 'node:assert/strict';
+          import { mkdir, writeFile } from 'node:fs/promises';
+          await mkdir('artifacts', { recursive: true });
+          const browser = await chromium.launch({ args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+          const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+          const errors = [];
+          page.on('pageerror', error => errors.push(error.message));
+          try {
+            const response = await page.goto(process.env.SITE_URL, { waitUntil: 'networkidle', timeout: 60000 });
+            assert.equal(response.status(), 200);
+            await page.waitForFunction(() => window.townDebug?.getStats().frames > 3, null, { timeout: 90000 });
+            assert.equal(await page.locator('#error').isVisible(), false);
+            const initial = await page.evaluate(() => window.townDebug.getStats());
+            assert.equal(initial.lots, 16);
+            assert.equal(initial.residents, 32);
+            assert.ok(initial.triangles > 10000);
+            const before = await page.evaluate(() => Array.from({ length: 32 }, (_, i) => window.townDebug.residentPosition(i)));
+            await page.waitForFunction(f => window.townDebug.getStats().frames >= f + 3, initial.frames, { timeout: 60000 });
+            assert.notDeepEqual(await page.evaluate(() => Array.from({ length: 32 }, (_, i) => window.townDebug.residentPosition(i))), before);
+            await page.screenshot({ path: 'artifacts/Town-live-neighborhood.png' });
+            await page.locator('#visit-home').click();
+            await page.waitForFunction(() => window.townDebug.getHome().open, null, { timeout: 30000 });
+            await page.locator('#home-action').click();
+            await page.waitForFunction(() => window.townDebug.getHome().state === 'entering', null, { timeout: 30000 });
+            await page.screenshot({ path: 'artifacts/Town-live-cottage.png' });
+            assert.deepEqual(errors, []);
+            const result = { url: page.url(), initial, home: await page.evaluate(() => window.townDebug.getHome()), pageErrors: errors, verifiedAt: new Date().toISOString(), note: 'Public-site software-rendered Chromium smoke test; not a hardware FPS benchmark.' };
+            await writeFile('artifacts/live-browser.json', JSON.stringify(result, null, 2));
+            console.log('Public Town renders in WebGL, residents move, and the furnished cottage and sofa controls work.');
+          } finally {
+            await browser.close();
+          }
+          NODE
+      - name: Retain public deployment verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: town-live-verification
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 30
