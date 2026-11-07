@@ -1,0 +1,72 @@
+name: Review Town V7
+on:
+  push:
+    branches: [feat/checkpoint-07-detail-performance]
+    paths: ['src/**', 'tests/**', 'tools/**', 'index.html', '.github/workflows/v7-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v7-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      BASELINE_ROOT: ${{ runner.temp }}/town-v6-baseline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Integrate and commit V7 before testing
+        run: |
+          node tools/integrate-v7.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.js src/home.js index.html package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v7): activate cottage-first detail, atlas and rendering optimizations'
+            git push origin HEAD:feat/checkpoint-07-detail-performance
+          fi
+      - name: Validate source and prepare the exact V6 baseline
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+          git fetch origin 01441198963c9ddc9ebdc7ba9fe92a021b7ae56b --depth=1
+          mkdir -p "$BASELINE_ROOT"
+          git archive 01441198963c9ddc9ebdc7ba9fe92a021b7ae56b | tar -x -C "$BASELINE_ROOT"
+          cp -R vendor "$BASELINE_ROOT/"
+      - name: Install capture browser
+        run: npx playwright install --with-deps chromium
+      - name: Compare real V6 and V7 rendering and test interactions
+        run: node tools/capture-v7.mjs
+      - name: Keep passing screenshots and measurements in Git
+        run: |
+          mkdir -p docs/v7-captures
+          cp artifacts-v7/*.png artifacts-v7/comparison.json docs/v7-captures/
+          git add docs/v7-captures
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(v7): preserve measured before-after captures and regression evidence'
+            git push origin HEAD:feat/checkpoint-07-detail-performance
+          fi
+      - name: Package recoverable source and evidence
+        if: always()
+        run: |
+          mkdir -p town-v7-checkpoint
+          git archive HEAD | tar -x -C town-v7-checkpoint
+          if [ -d vendor ]; then cp -R vendor town-v7-checkpoint/; fi
+          if [ -d artifacts-v7 ]; then cp -R artifacts-v7 town-v7-checkpoint/; fi
+          git rev-parse HEAD > town-v7-checkpoint/COMMIT.txt
+          cd town-v7-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v7-checkpoint
+          path: town-v7-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
