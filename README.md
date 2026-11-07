@@ -1,37 +1,36 @@
-# JinJinJenn Town V4
+# JinJinJenn Town V6
 
-A playable pastel neighborhood for [JinJinJenn](https://jinjinjenn.github.io/), with generated homes, gardens, a cafe and residents going about their walks.
+A playable rose-and-mint neighborhood that combines real 3D homes, furniture and residents with illustrated garden details.
 
-**Play:** https://jinjinjenn.github.io/town/
+**Play:** https://jinjinjenn.github.io/town/  
+**Runtime art gallery:** https://jinjinjenn.github.io/town/assets/v6/
 
-## V4
+## What's in V6
 
-The website has a pink header, property panel, toolbar and dialogs. Search the Residents menu to find someone and follow their walk. Visit Clover Cottage to look inside its four furnished rooms, invite Luca onto the sofa, and choose a rose, lavender or sage furniture palette. The palette is remembered in your browser. Photo view hides the interface without replacing the real 3D scene.
+Painted hedge and planter cards decorate the gardens, with illustrated noticeboards beside the cafe and parks. The 99 garden cards share three instanced draw batches. Floral artwork decorates the interface, and drifting petals use a painted texture. The houses, furniture, people and cottage interactions are still 3D, not an image masquerading as a game.
 
-The cottage now includes interior window frames and curtains, shelves and books, kitchen details, a sofa throw, patterned bedding and bathroom accessories. More blossoms, a floral gate and drifting petals dress the gardens. The petals use a bounded instanced batch and can be disabled in Help; reduced-motion preferences are respected.
+Visit Clover Cottage to open its furnished interior, invite Luca to sit on the sofa, and choose among four saved furniture palettes. Search for a resident and follow their walk, leave the camera touring the town, or use photo view to hide the interface. Help includes independent toggles for illustrated garden layers and drifting petals.
+
+Assets in the gallery are small optimized runtime derivatives, not full-resolution source PNGs. Original art remains in the downloaded thread art kit. See [RELEASE_V6.md](RELEASE_V6.md) for the exact scope.
 
 ## Run locally
 
-From a downloaded checkpoint ZIP, run `node tools/serve.mjs` and open http://127.0.0.1:4173/town/. The archive includes the renderer.
+From a complete checkpoint ZIP, run `node tools/serve.mjs` and visit http://127.0.0.1:4173/town/. The checkpoint includes the renderer.
 
-From a source checkout, run `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`. Do not open index.html directly with file://.
-
-Node 20 or later and a WebGL2-capable browser are required. Three.js is pinned to 0.180.0 and copied to vendor for same-origin deployment. No Blender job, image service, CDN, or additional runtime framework is required.
+From a source checkout, run `npm ci --ignore-scripts`, `npm run vendor`, and `npm run dev`. Use Node 20 or later and a WebGL2-capable browser. Do not open index.html directly with file://. Three.js is pinned to 0.180.0; no external image-generation service is called at runtime.
 
 ## Controls
 
-Drag to pan, scroll or pinch to zoom, and right-drag to rotate. WASD or arrow keys move the camera; Q/E turn and R resets it. Tour moves the camera, Pause stops simulation, Evening switches lighting, and New town generates a different seed. Help contains the seed input, shading option and petal toggle.
+Drag to pan, scroll or pinch to zoom, and right-drag to rotate. WASD or arrow keys move the camera; Q/E turn and R resets it. Tour moves the camera, Pause stops simulation, Evening switches lighting, and New town generates a different seed. Photo view exits with Return or Escape. Help contains the seed and graphics options.
 
 ## Current limits
 
-The neighborhood is a finite 4-by-4 layout with 16 lots and 32 residents. Only Clover Cottage has a furnished interactive interior, and its sofa is the one usable furniture interaction. Full furniture placement, deeper resident AI, sleeping and infinite streaming are future work. The generated concept artwork is an art-direction reference, not an exact screenshot or a substitute for the runtime.
+Town is a finite 4-by-4 neighborhood with 16 lots and 32 residents. Only Clover Cottage has a furnished interactive interior; its sofa is the one usable furniture interaction. Garden cards and noticeboards are decoration, not additional gameplay. Furniture placement, deeper resident AI, sleeping, additional furnished houses and infinite streaming are not implemented. Concept artwork remains an aspirational visual target.
 
-## Tests, hosting and recovery
+## Tests, publishing and recovery
 
-`npm test` runs 20 unit tests. Install the browser with `npx playwright install --with-deps chromium`, then run `npx playwright test tests/browser/v4.spec.js` for the four targeted V4 browser tests. Tests check actual rendering and controls, persistence, the sofa route, and phone layouts; they do not certify hardware frame rates.
+Run `npm test` for 26 unit tests. Install the browser with `npx playwright install --with-deps chromium`, then run `npx playwright test tests/browser/v6.spec.js` for six focused browser tests. These check rendering, artwork loading, the sofa route, saved palettes, following, photo exit, regeneration, the art gallery and phone layouts; they are not hardware performance benchmarks.
 
-Changes to runtime files on main are published automatically through `.github/workflows/pages.yml`. That workflow stages only the game, pushes gh-pages, requests a native Pages build and verifies the public manifest, file hashes and live browser behavior. `src/v4.css` and `src/v4-layout.css` are published by its recursive src copy.
+Runtime changes on `main` publish automatically through `.github/workflows/pages.yml`. It builds the site, updates `gh-pages`, requests publication and checks the public manifest, file hashes and browser behavior. Check the actual workflow and `/town/__deployment.json` before claiming a version is live.
 
-Read [HANDOFF.md](HANDOFF.md) before resuming work and [HOSTING.md](HOSTING.md) for the publishing route. Review the latest workflow results rather than assuming a commit is deployed. Keep milestones in Git and downloadable source ZIPs; never leave the only working copy in a temporary computer.
-
-Town is separate from Jenn's Cafe, Farm, mods site, and profile website. Independent project; not affiliated with Electronic Arts or Maxis.
+Read [HANDOFF.md](HANDOFF.md) before continuing and [HOSTING.md](HOSTING.md) for the publishing route. Keep milestone branches and source ZIPs. This project is separate from Jenn's profile, mods, Cafe and Farm sites. Independent project; not affiliated with Electronic Arts or Maxis.
