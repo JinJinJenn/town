@@ -1,0 +1,30 @@
+{
+  "stats": {
+    "time": 135.91659999999484,
+    "inside": 7,
+    "chatting": 3,
+    "walking": 19,
+    "visited": 25,
+    "arrivals": 20,
+    "departures": 16,
+    "gathering": false,
+    "slots": 32,
+    "conversations": 6,
+    "drinks": 4,
+    "tvSessions": 2,
+    "watching": 0,
+    "drinking": 1,
+    "pairs": 1,
+    "groups": 1,
+    "maxGroup": 3,
+    "seated": 4,
+    "seatSessions": 12
+  },
+  "warnings": [
+    {
+      "stage": "boot",
+      "text": "THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The \"position\" attribute is likely to have NaN values. BufferGeometry"
+    }
+  ],
+  "verifiedAt": "2026-11-07T17:24:06.485Z"
+}
