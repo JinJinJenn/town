@@ -15,6 +15,8 @@ test('V4 pink UI and dressed cottage render through the production compositor',a
   expect(await page.locator('.topbar').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('gradient');
   await page.screenshot({path:'artifacts-v4/TownV4-welcome.png'});
   await page.locator('#visit-home').click();await frame(page);await page.locator('#pause').click();
+  const panel=await page.locator('#inspector').boundingBox(),palette=await page.locator('#palette-options').boundingBox();
+  expect(palette.y+palette.height).toBeLessThanOrEqual(panel.y+panel.height-5);
   await page.screenshot({path:'artifacts-v4/TownV4-cottage.png'});
   await page.locator('#evening').click();await frame(page);await page.screenshot({path:'artifacts-v4/TownV4-evening.png'});
   expect((await page.evaluate(()=>townDebug.getStats())).petalInstances).toBe(96);expect(errors).toEqual([]);
@@ -47,6 +49,8 @@ for(const width of [390,320])test(`V4 controls fit a ${width}px phone without co
     const b=await page.locator(sel).boundingBox();expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x+b.width).toBeLessThanOrEqual(width+.5);
   }
   const a=await page.locator('#inspector').boundingBox(),b=await page.locator('.toolbar').boundingBox();expect(a.y+a.height).toBeLessThanOrEqual(b.y);
+  expect(a.y+a.height).toBeGreaterThan(b.y-50);
+  const colors=await page.locator('#palette-options').boundingBox();expect(colors.y+colors.height).toBeLessThanOrEqual(a.y+a.height-5);
   await page.locator('[data-palette="lavender"]').click();expect((await page.evaluate(()=>townDebug.getStats())).palette).toBe('lavender');
   await page.screenshot({path:`artifacts-v4/TownV4-mobile-${width}.png`});
 });

@@ -1,103 +1,37 @@
-# JinJinJenn Town
+# JinJinJenn Town V4
 
-A procedural, pastel 3D neighborhood for [JinJinJenn](https://jinjinjenn.github.io/), built as a standalone project for `/town/`.
+A playable pastel neighborhood for [JinJinJenn](https://jinjinjenn.github.io/), with generated homes, gardens, a cafe and residents going about their walks.
 
-## Checkpoint 02: a home you can visit
+**Play:** https://jinjinjenn.github.io/town/
 
-The neighborhood has 16 lots, including Jenn's Cafe and two parks, with 32 articulated residents walking along the sidewalks. Seeded recipes vary the other homes, gardens, colors, and residents. This checkpoint keeps the finite street grid and adds one furnished, usable home rather than attempting a whole life simulator at once.
+## V4
 
-**Visit Clover Cottage** opens a close-up view of its kitchen, living room, bedroom, and bathroom. The roof lifts out of view and the walls facing the camera disappear. Rotating the camera changes which walls are hidden. Choose **Ask Luca to sit**, or select the sofa, and Luca walks around the sidewalk, through the gate, up the steps, and into the living room. After Luca sits down, **Send Luca outside** retraces the route and resumes the neighborhood walk. Pause freezes this activity too.
+The website has a pink header, property panel, toolbar and dialogs. Search the Residents menu to find someone and follow their walk. Visit Clover Cottage to look inside its four furnished rooms, invite Luca onto the sofa, and choose a rose, lavender or sage furniture palette. The palette is remembered in your browser. Photo view hides the interface without replacing the real 3D scene.
 
-The house has a real doorway and a hinged door, and its furniture is built from the same reusable geometry kit as the rest of the neighborhood. Roof seams now use filtered surface shading instead of small raised strips. No Blender job, external model service, or generated-image backdrop is required.
+The cottage now includes interior window frames and curtains, shelves and books, kitchen details, a sofa throw, patterned bedding and bathroom accessories. More blossoms, a floral gate and drifting petals dress the gardens. The petals use a bounded instanced batch and can be disabled in Help; reduced-motion preferences are respected.
 
-This is a new implementation, not recovered source from the interrupted November 6 prototype. The interface uses complete, natural sentences. The world is real-time WebGL, while the website controls remain HTML/CSS.
+## Run locally
 
-## Run the packaged checkpoint ZIP
+From a downloaded checkpoint ZIP, run `node tools/serve.mjs` and open http://127.0.0.1:4173/town/. The archive includes the renderer.
 
-The checkpoint ZIP includes the pinned renderer in `vendor/`, so no CDN or npm installation is needed to run it.
+From a source checkout, run `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`. Do not open index.html directly with file://.
 
-1. Extract the whole ZIP while preserving its folders.
-2. In that folder, run `node tools/serve.mjs`.
-3. Open `http://127.0.0.1:4173/town/`.
-4. Select **Visit Clover Cottage**, then **Ask Luca to sit**.
-
-Alternatively, run `python -m http.server 4173` in the extracted folder and open `http://127.0.0.1:4173/`.
-
-Do not double-click `index.html`: JavaScript modules need a local HTTP server. The scene requires WebGL2. When it cannot start, the page explains the failure instead of presenting a still image as gameplay.
-
-## Run a fresh Git checkout
-
-Use Node.js 20 or later:
-
-```sh
-npm ci
-npm run vendor
-npm run dev
-```
-
-`npm run vendor` copies the pinned Three.js 0.180.0 modules and license into `vendor/`. No build bundler is required. To run the tests after preparing the renderer:
-
-```sh
-npm test
-npx playwright install chromium
-npm run test:browser
-```
+Node 20 or later and a WebGL2-capable browser are required. Three.js is pinned to 0.180.0 and copied to vendor for same-origin deployment. No Blender job, image service, CDN, or additional runtime framework is required.
 
 ## Controls
 
-| Action | Control |
-| --- | --- |
-| Move around | Drag, WASD, or arrow keys |
-| Zoom | Scroll, pinch, or the + and - buttons |
-| Rotate | Right-drag, Q, or E |
-| Return to the starting view | R or the home button |
-| Inspect a resident or building | Select it in the scene |
-| Follow a resident | Select them, then choose Follow this resident |
-| Visit the furnished home | Visit Clover Cottage, or select the cottage and choose Look inside |
-| Try the sofa | Ask Luca to sit, or select the sofa while the home is open |
-| Leave the sofa | Send Luca outside |
-| Restore the exterior | Put the roof back |
-| Watch a camera tour | Tour |
-| Pause movement | Pause |
-| Change the lighting | Evening |
-| Reproduce a neighborhood | Open ? and enter its seed |
-
-Manual camera input stops the tour or following. The welcome panel remembers dismissal when local storage is available. Rendering and simulation pause when the tab is hidden. Home activity is session-only; there is no editable save format yet.
-
-## Source map
-
-- `src/plan.js` produces deterministic lot recipes and sidewalk paths.
-- `src/kit.js` defines shared geometry, architecture, props, materials, roof shading, and instancing.
-- `src/world.js` assembles the neighborhood and articulated residents.
-- `src/home-plan.js` defines the one furnished layout, furniture footprints, sofa anchor, and bounded route advancement.
-- `src/home.js` builds the cottage's independently visible exterior, interior, and door batches.
-- `src/home-activity.js` handles Luca's walk, seated pose, and return journey.
-- `src/main.js` owns rendering, camera input, lighting, selection, and interface behavior.
-- `tests/` contains generation, placement, routing, geometry, desktop, and mobile checks.
-- `HANDOFF.md` records the validated commit and the next bounded task.
-
-## Validation and backups
-
-The GitHub Actions workflow checks JavaScript, runs the unit tests, and tests the real renderer in Chromium. Browser checks include a screen-space click on the sofa, pause behavior, camera-aware walls, sitting and returning, seed regeneration during a visit, repeated cutaway toggles, and mobile layouts at 390 and 320 pixels. The long walking journey is advanced through the same simulation code in bounded fixed steps during testing; it is not replaced with teleportation.
-
-Artifacts include source, the pinned renderer, screenshots, test results, `COMMIT.txt`, and `SHA256SUMS.txt`. Packaging also runs when a check fails, so an archive by itself does not mean the tests passed. See `HANDOFF.md` for the accepted result. GitHub Actions artifacts expire after 30 days; Git history and downloaded ZIPs are separate copies. Software-rendered screenshots are not hardware frame-rate measurements.
-
-Checkpoint 01 remains available on `checkpoint/01-visual-neighborhood`. Keep accepted checkpoints intact, and commit each bounded change before starting another expensive task.
+Drag to pan, scroll or pinch to zoom, and right-drag to rotate. WASD or arrow keys move the camera; Q/E turn and R resets it. Tour moves the camera, Pause stops simulation, Evening switches lighting, and New town generates a different seed. Help contains the seed input, shading option and petal toggle.
 
 ## Current limits
 
-Only Clover Cottage is furnished. Its layout and route are authored, not a general room generator or navigation system. Luca is the only resident who can use furniture; other residents still follow sidewalk loops. The bed, kitchen, and bathroom furniture are visual assets, not usable activities yet. Decorating, needs, relationships, cross-block navigation, district streaming, and persistent edits are not implemented.
+The neighborhood is a finite 4-by-4 layout with 16 lots and 32 residents. Only Clover Cottage has a furnished interactive interior, and its sofa is the one usable furniture interaction. Full furniture placement, deeper resident AI, sleeping and infinite streaming are future work. The generated concept artwork is an art-direction reference, not an exact screenshot or a substitute for the runtime.
 
-The roof and shadow pass is an improvement, not a claim of Blender-quality global illumination. Hardware performance, antialiasing at different display scales, and wider device coverage still need review.
+## Tests, hosting and recovery
 
-## Publishing under /town/
+`npm test` runs 20 unit tests. Install the browser with `npx playwright install --with-deps chromium`, then run `npx playwright test tests/browser/v4.spec.js` for the four targeted V4 browser tests. Tests check actual rendering and controls, persistence, the sofa route, and phone layouts; they do not certify hardware frame rates.
 
-All runtime imports and assets use relative paths. The intended public URL is `https://jinjinjenn.github.io/town/`, but deployment has not been verified. A source commit does not prove GitHub Pages is enabled. A deployed copy needs `index.html`, `style.css`, `src/`, and `vendor/` together.
+Changes to runtime files on main are published automatically through `.github/workflows/pages.yml`. That workflow stages only the game, pushes gh-pages, requests a native Pages build and verifies the public manifest, file hashes and live browser behavior. `src/v4.css` and `src/v4-layout.css` are published by its recursive src copy.
 
-## Next bounded step
+Read [HANDOFF.md](HANDOFF.md) before resuming work and [HOSTING.md](HOSTING.md) for the publishing route. Review the latest workflow results rather than assuming a commit is deployed. Keep milestones in Git and downloadable source ZIPs; never leave the only working copy in a temporary computer.
 
-Move the furniture route and interaction data into reusable approach/occupancy records, then add one bed interaction with the same path, pause, release, and regeneration tests. Do not expand to district streaming until the small interaction loop is dependable.
-
-Blender remains optional. Introduce one asset script and one time-limited export at a time, committing both the script and result before another job. A temporary Blender or browser workspace must never contain the only copy of working source.
-
-Independent project; not affiliated with Electronic Arts or Maxis. Runtime geometry is generated by this project's code rather than extracted from The Sims. Third-party renderer licensing is included with packaged checkpoints.
+Town is separate from Jenn's Cafe, Farm, mods site, and profile website. Independent project; not affiliated with Electronic Arts or Maxis.
