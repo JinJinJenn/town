@@ -1,5 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import {dressV7Home} from './v7-polish.js';
+import {dressV7Home as dressV7LayeredHome} from './v7-detail.js';
 import {dressV5Home} from './v5-look.js';
 import {dressHome, COTTAGE_PALETTES, paletteRole} from './home-polish.js';
 import {FLOOR_Y, HOME_SEAT, ROOMS} from './home-plan.js';
@@ -137,6 +138,7 @@ export function createHome(kit, lot) {
   dressHome(kit,{inside,wallRoots,lot,floor});
   dressV5Home(kit,{inside,wallRoots,lot,floor});
   if(kit.artVersion==='07-cottage-detail')dressV7Home(kit,{inside,wallRoots,lot,floor});
+  const v7Details=dressV7LayeredHome(kit,{inside,wallRoots,lot,floor});
   inside.traverse(m=>{if(m.userData.part)m.userData.paletteRole??=paletteRole(m.userData.color.getHexString());});
   source.updateMatrixWorld(true);
   const batches={};
@@ -167,7 +169,7 @@ export function createHome(kit, lot) {
     return true;
   }
   setPalette(palette);setOpen(false);
-  return {group:model,origin,lot,setPalette,get palette(){return palette;},polishVersion:5,rooms:ROOMS,seat:HOME_SEAT,get isOpen(){return open;},setOpen,update,
+  return {group:model,origin,lot,setPalette,get palette(){return palette;},polishVersion:7,detailInstances:v7Details.instances,rooms:ROOMS,seat:HOME_SEAT,get isOpen(){return open;},setOpen,update,
     worldPoint(x,y,z){return new THREE.Vector3(x,y,z).add(origin);},
     visibleWalls:()=>Object.fromEntries(Object.keys(wallRoots).map(k=>[k,batches[k].group.visible])),
     dispose(){Object.values(batches).forEach(b=>b.dispose());model.clear();},
