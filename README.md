@@ -1,24 +1,15 @@
-# JinJinJenn Town V9
+# JinJinJenn Town V10
 
-A cozy 3D neighborhood in live mode. Visit Clover Cottage, follow residents, gather the neighbors, change the time of day and watch them settle into conversations.
+A small pink-and-mint neighborhood with a living 3D household and GPU-rendered controls.
 
-Play: https://jinjinjenn.github.io/town/
+Play at https://jinjinjenn.github.io/town/. Clover Cottage opens with paired conversations, two residents having drinks and Luca watching television. Neighbors visit, leave and circulate outside.
 
-V9 replaces the normal HTML game interface with a compact GPU-rendered glyph/icon HUD. The 32 residents now travel on connected sidewalks, visit the furnished cottage in rotating groups and use a reserved sofa. The V8 world, decorative props and shared rendering assets remain.
+Select a person, then click the dining table or TV/sofa for a contextual activity. Space pauses; 1/2/3 set speed; H focuses home; G gathers neighbors; F follows. T or X queues/stops TV; B queues/stops a drink. R shows the neighborhood, Q/E rotate, drag pans, and scroll/pinch zooms. The portrait roster and options are GPU-rendered. There is no build mode.
 
-This is a finite live-mode prototype, not a full Sims clone. It has 16 lots, one furnished home, a cafe and two parks. There is no build mode, needs system or relationship simulation. Most props remain decorative.
+## Run and check
 
-## Run
+Packaged checkpoint: run `node tools/serve.mjs`, then open http://127.0.0.1:4173/town/. Fresh Git checkout: `npm ci --ignore-scripts`, `npm run vendor`, `npm run dev`. Do not open index.html with file://.
 
-Packaged checkpoint with vendor/: node tools/serve.mjs, then http://127.0.0.1:4173/town/.
-Fresh checkout: npm ci --ignore-scripts; npm run vendor; npm run dev.
+Run `npm test` for unit tests. Install Playwright Chromium, then `node tools/review-v10.mjs` for the focused browser review. `SITE_URL` selects a public-site smoke check. Main publishes through the existing Pages workflow; passing screenshots and review data are tracked in docs/v10-captures/.
 
-## Controls
-
-Drag to pan; pinch/scroll to zoom; right-drag or Q/E to rotate. Select residents by clicking them or using the GPU roster. Space pauses. 1/2/3 change speed. H returns home, R opens the overview, G gathers neighbors, F follows, and X queues sofa use or stands up. Escape opens options.
-
-## Verify and continue
-
-npm test runs generation, geometry and live-mode tests. node tools/review-v9.mjs runs WebGL/UI acceptance checks after Playwright Chromium is installed. Main automatically publishes through Pages with public-file hash checks and a live-mode browser check.
-
-Read HANDOFF.md and V9_CHECKPOINT.md. Keep old checkpoints intact and save source before long tests. Independent project, not affiliated with EA or Maxis.
+Read HANDOFF.md and V10_CHECKPOINT.md for scope and recovery. This remains a bounded prototype, not a full needs, relationship, job, building or furniture-placement simulation. Normal visible UI is WebGL; HTML only hosts the canvas and error fallback.

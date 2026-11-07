@@ -1,51 +1,42 @@
-# Town V9: GPU live mode and neighborhood gatherings
+# Town V10: household activities and portrait-led GPU live mode
 
-## Resume here
+Only change JinJinJenn/town. V9 baseline: 81a2ec56cc78173e5364014016489b34072ad0f7. Work branch: feat/checkpoint-10-household-life. Tested runtime: b1eb719cd92aeddcbf37468ac2c78267140378b5. Passing captures: 81301167082fb377b3ead9ff29e92c356e0fba2f. Release documentation and CI changes do not change that runtime. Leave the profile, mods, Cafe and Farm repositories alone. Preserve earlier checkpoints.
 
-Only change JinJinJenn/town. V9 builds on V8 release 9b67f1f847d9712c87770a1255a061aae1ff1b7d. Source branch: feat/checkpoint-09-gpu-live-mode. Accepted runtime: f75d4def5523b60de3003fdbe25266c25865996a. Captures are committed at db17c50b4e265ac8c578c472b0110bdf152b15a1. Subsequent documentation and CI updates do not change runtime code. Prior checkpoints remain intact. Public game: https://jinjinjenn.github.io/town/. Leave the separate profile, mods, Cafe and Farm repositories unchanged.
+## Scope
 
-## Interface
+The central cottage remains the starting view, now closer and slightly lower. The existing town, 16 lots, 32 residents, detailed props and illustrated garden cards remain. No build/buy mode, needs, jobs, relationship simulation or additional furnished homes were introduced.
 
-The normal page is a full-window WebGL canvas with a compact pink-and-mint live HUD. It has selection/activity, resident shortcuts, pause and 1/2/3 speed controls, home, gathering, resident chooser and a small options menu. The old website header, property-description card and HTML buttons are removed from the active page. No build/buy mode or fake needs bars were added.
+The household controller uses three pairs of conversation destinations, one reserved sofa/TV spot and two reserved dining chairs. The initial household contains two talking/listening pairs, two residents having drinks and Luca watching television. Only world construction places residents directly at their activities. Later arrivals and departures use the connected street, entry and clearance graph. Characters settle, perform bounded activities, release slots and circulate outside. Conversations require reciprocal partners and alternate speech/listening turns. Selected activity requests do not steal occupied destinations.
 
-A single 1024x512 glyph/icon atlas is rasterized once into an offscreen canvas using the installed system font. Visible glyphs and icons are GPU-textured quads; rounded panels share their geometry/material. The HUD uses one additional draw call on the existing WebGL renderer, not a Canvas2D overlay or another WebGL context. It is bitmap-atlas text, not MSDF. The atlas is not redrawn each frame. Font files are not shipped. Geometry updates when state changes and at a bounded refresh cadence.
+Residents have smaller heads, longer legs, clearer clothing silhouettes, articulated elbows and held cups. Seated drinking raises a cup; TV watching turns the head toward the screen; listeners nod while speakers gesture. This is procedural animation, not full-body IK or motion capture. Locomotion retains acceleration, bounded turning, distance-driven gait and simple following distance. It is not a general crowd collision solver.
 
-HTML remains only as the canvas host, nonvisual instructions, noscript message and fatal graphics-error fallback. Normal gameplay has no visible HTML text or buttons; the web page is not literally HTML-free. Pointer/touch hits, hover tooltips, Tab/Enter and Escape work, but this is not a complete screen-reader interface.
+One small unlit procedural TV screen becomes active when someone watches. It needs no image/video download or extra light, follows the simulation clock and is hidden with the cottage closed.
 
-## Residents
+## GPU interface
 
-All 32 residents use connected sidewalks and crosswalks rather than isolated lot loops. A clearance grid connects the gate, steps and doorway to eight reserved indoor conversation destinations and one reserved sofa position. Six residents start chatting inside and Luca starts seated; the others begin outside. This initial placement happens at world creation. Subsequent visits/departures follow routes without teleporting.
+The compact desktop HUD sits at the bottom left. Selected and nearby residents have colored portraits based on their actual skin, hair, clothes, hat and glasses metadata. These are illustrated faces, not offscreen renders of the 3D mesh. Portraits, glyphs, icons and rounded panels share the existing 1024x512 atlas and one GPU overlay draw call. Canvas2D only prepares atlas pixels; the visible interface is WebGL. Portrait regions rebuild for a changed world seed, not each animation frame. No font files are bundled.
 
-Visits rotate between the cottage and public sidewalk gathering positions near the cafe, parks and house. Gather prioritizes home visits without stacking everyone on one point. Locomotion uses acceleration/deceleration, rate-limited turning, distance-driven gait and walking/sitting blending. Chatters gesture and receive GPU bubbles. Simple following-distance slowdown and opposite sidewalk offsets are included; this is not a general collision-avoidance/crowd solver.
+Select a resident, then click the dining table for Have a drink or the TV/sofa for Watch TV. Context menus dismiss when clicking elsewhere or pressing Escape. T or X queues/stops TV; B queues/stops a drink. Space, 1/2/3, H, G, R, F, Q/E, palette and options controls remain. There is no build mode or permanent action-toolbar expansion. HTML only hosts the canvas, nonvisual instructions and fatal-error fallback. Screen-reader accessibility remains incomplete.
 
-Selected residents can queue sofa use or stand when already sitting. Pause and speed affect the same simulation clock as existing ambient effects. Hidden tabs stop the render loop. Existing V8 geometry, props, garden atlas, limited shadow updates, phone pixel-ratio cap and shading defaults remain. Needs, relationships, jobs, additional furnished homes and other furniture interactions are not implemented.
+## Source and recovery
 
-## Controls
+- src/v10-life.js: household navigation, destination reservations, reciprocal conversations, activity lifecycle and animation.
+- src/v10-characters.js: shared-primitive resident factory, appearance metadata and held cups.
+- src/v10-fixtures.js: TV shader and furniture hit targets with explicit cleanup.
+- src/v10-hud.js: GPU portrait atlas, compact layout and object-action menu.
+- src/main-v10.js: integrated runtime; src/main.js is its re-export.
+- src/world.js: optional character factory hook, retaining legacy unit coverage.
+- tests/v10.test.mjs: reachability, reciprocal partners, selected action requests, turnover and movement bounds.
+- tools/integrate-v10.mjs and tools/refine-v10.mjs: guarded development migrations, not browser dependencies. Native accepted source is already committed.
+- tools/review-v10.mjs: actual rendered captures, object clicks, activities, no-visible-DOM assertion, phone/tablet and missing-art checks.
+- .github/workflows/v10-review.yml: saves integrated source before browser work, commits passing captures and packages recoverable source even on failure.
 
-Drag to pan; scroll/pinch to zoom; right-drag or Q/E to rotate. WASD/arrows pan. Click a resident to select them. Space pauses, 1/2/3 set speed, H focuses home, R gives overview, G gathers, F follows, X queues sofa use or stands, V toggles the roof, C changes the cottage palette. Escape opens options; Tab/Enter operate the HUD. The options menu includes overview, roof, evening, palettes, shading, ambient details and regeneration.
+Review run 42387145772 passed all 45 unit tests and five browser scenarios: desktop, 390px, 320px, 820px and regeneration/missing-art. The 900-second simulation covered all 32 residents, 87 arrivals, 90 departures, 21 paired conversations, 22 drink sessions and nine TV sessions. The browser exercised actual projected furniture clicks, selected drink completion, pause, palettes, portrait selection, following and phone control bounds. The initial browser failure caught a reserved GLSL identifier in the TV shader; it was fixed, not ignored.
 
-The old DOM portfolio panels, resident-search input, tour button and photo-view UI are intentionally not V9 controls. Do not silently claim they were retained. Original versions remain in Git.
+Captured desktop counters: 57 scene calls plus one HUD call, 1,058,204 scene triangles, seven textures and 25 geometries. These are software Chromium diagnostics, not hardware FPS or a matched-camera V9 performance comparison. Before/after screenshots intentionally show the versions' different arrival framing. Actual passing captures are permanently tracked in docs/v10-captures/.
 
-## Source and verification
+## Run and publish
 
-- src/main-v9.js: live renderer lifecycle, camera, input and simulation clock. src/main.js is its stable re-export.
-- src/v9-hud.js: atlas, one-batch overlay and control hit rectangles.
-- src/v9-life.js: route graph, destination reservations, movement and animation.
-- src/world.js: optional live-controller hook, retaining older movement for legacy unit coverage.
-- tests/v9.test.mjs: reachability/clearance, deterministic visits, movement bounds and sofa reservation.
-- tools/review-v9.mjs: actual WebGL capture and pointer/keyboard, phone/tablet, no-DOM and missing-art checks. SITE_URL runs the public smoke check.
-- tools/integrate-v9.mjs: guarded development migration, not a browser dependency; accepted source is already integrated.
+Packaged source includes the pinned renderer: node tools/serve.mjs, then http://127.0.0.1:4173/town/. Fresh checkout: npm ci --ignore-scripts; npm run vendor; npm run dev. Do not use file://. npm test runs unit tests. Install Playwright Chromium and run node tools/review-v10.mjs for the browser suite. SITE_URL selects the public-site smoke check.
 
-Review run 42383482984 passed all 40 unit tests and five browser scenarios: desktop, 390px, 320px, 820px and missing-art fallback. Its 900-second unit simulation verified visits by all 32 residents, 92 arrivals and 97 departures, unique reservations and bounded movement. Browser checks exercise actual GPU hit locations, pause/2x/3x, movement, gathering, sofa stand-up, palette changes, roster selection and following. More exhaustive physical-device playtesting remains worthwhile; do not claim every old version-specific browser test passes.
-
-The desktop capture reports 57 scene calls, 1,048,818 scene triangles, seven renderer textures and 24 geometries, with one extra HUD call. These are diagnostic counters, not a matched V8 FPS benchmark. The 320px capture uses renderer pixel ratio 1 with soft shading off. Screenshots are real software-rendered Chromium captures, not image-generation outputs.
-
-The initial browser run caught a test race: opening a GPU menu changes state before the next frame builds its hit table. The review now waits for rendered control bounds and a subsequent frame. Preserve that synchronization.
-
-## Publish and recover
-
-Main's validation now uses the V9 harness instead of legacy DOM scripts. Pages retains complete public-file hash verification and runs the new live-mode smoke test. Check the final Pages result and public __deployment.json commit before saying a source update is live. Preserve checkpoint/08-prop-variety and earlier versions. Source alone on the feature branch is not publication.
-
-Packaged source includes vendor/: node tools/serve.mjs, then http://127.0.0.1:4173/town/. Fresh checkout: npm ci --ignore-scripts; npm run vendor; npm run dev. Do not use file://. npm test runs unit tests. Install Playwright Chromium, then node tools/review-v9.mjs for the focused browser suite.
-
-Source is committed before heavy tests. Passing captures are tracked in docs/v9-captures, and source archives include checksums. Use expected-SHA fast-forward updates, never force-push over concurrent edits. Keep this a bounded live-mode checkpoint.
+Main deploys through the established Pages workflow with public file hashes and a live browser check. Read HOSTING.md. Confirm the final Pages result and public __deployment.json commit before saying a new version is live. Preserve bounded merging, the garden atlas, shadow throttling, phone quality defaults and disposal. Never force-push over concurrent work or confuse a saved feature branch with a published release.
