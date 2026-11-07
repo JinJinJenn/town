@@ -1,9 +1,0 @@
-node_modules/
-vendor/
-artifacts/
-test-results/
-playwright-report/
-town-checkpoint/
-.DS_Store
-Thumbs.db
-*.log
