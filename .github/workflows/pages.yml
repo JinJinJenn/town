@@ -65,7 +65,7 @@ jobs:
             }
           }
           await scan();
-          for (const file of ['index.html', 'style.css', 'src/main.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
+          for (const file of ['index.html', 'style.css', 'src/main.js', 'src/main-v9.js', 'src/v9-hud.js', 'src/v9-life.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
           await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.GITHUB_SHA, files }, null, 2));
           console.log(`Prepared ${Object.keys(files).length} public files with same-origin renderer imports.`);
           NODE
@@ -130,45 +130,10 @@ jobs:
           NODE
       - name: Install the live verification browser
         run: npx playwright install --with-deps chromium
-      - name: Verify real 3D rendering and cottage controls on the public site
+      - name: Verify GPU live mode on the public website
         env:
           SITE_URL: https://jinjinjenn.github.io/town/
-        run: |
-          node --input-type=module <<'NODE'
-          import { chromium } from '@playwright/test';
-          import assert from 'node:assert/strict';
-          import { mkdir, writeFile } from 'node:fs/promises';
-          await mkdir('artifacts', { recursive: true });
-          const browser = await chromium.launch({ args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-          const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-          const errors = [];
-          page.on('pageerror', error => errors.push(error.message));
-          try {
-            const response = await page.goto(process.env.SITE_URL, { waitUntil: 'networkidle', timeout: 60000 });
-            assert.equal(response.status(), 200);
-            await page.waitForFunction(() => window.townDebug?.getStats().frames > 3, null, { timeout: 90000 });
-            assert.equal(await page.locator('#error').isVisible(), false);
-            const initial = await page.evaluate(() => window.townDebug.getStats());
-            assert.equal(initial.lots, 16);
-            assert.equal(initial.residents, 32);
-            assert.ok(initial.triangles > 10000);
-            const before = await page.evaluate(() => Array.from({ length: 32 }, (_, i) => window.townDebug.residentPosition(i)));
-            await page.waitForFunction(f => window.townDebug.getStats().frames >= f + 3, initial.frames, { timeout: 60000 });
-            assert.notDeepEqual(await page.evaluate(() => Array.from({ length: 32 }, (_, i) => window.townDebug.residentPosition(i))), before);
-            await page.screenshot({ path: 'artifacts/Town-live-neighborhood.png' });
-            await page.locator('#visit-home').click();
-            await page.waitForFunction(() => window.townDebug.getHome().open, null, { timeout: 30000 });
-            await page.locator('#home-action').click();
-            await page.waitForFunction(() => window.townDebug.getHome().state === 'entering', null, { timeout: 30000 });
-            await page.screenshot({ path: 'artifacts/Town-live-cottage.png' });
-            assert.deepEqual(errors, []);
-            const result = { url: page.url(), initial, home: await page.evaluate(() => window.townDebug.getHome()), pageErrors: errors, verifiedAt: new Date().toISOString(), note: 'Public-site software-rendered Chromium smoke test; not a hardware FPS benchmark.' };
-            await writeFile('artifacts/live-browser.json', JSON.stringify(result, null, 2));
-            console.log('Public Town renders in WebGL, residents move, and the furnished cottage and sofa controls work.');
-          } finally {
-            await browser.close();
-          }
-          NODE
+        run: node tools/review-v9.mjs
       - name: Retain public deployment verification
         if: always()
         uses: actions/upload-artifact@v4

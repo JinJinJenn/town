@@ -1,23 +1,24 @@
-# JinJinJenn Town V8
+# JinJinJenn Town V9
 
-A cozy, procedural 3D neighborhood for JinJinJenn, with a furnished cutaway cottage, animated residents, gardens and a pink-and-mint interface.
+A cozy 3D neighborhood in live mode. Visit Clover Cottage, follow residents, gather the neighbors, change the time of day and watch them settle into conversations.
 
 Play: https://jinjinjenn.github.io/town/
 
-V8 adds 36 simple-3D prop recipes and 113 placed props to the default neighborhood. These include gardening equipment, patio furniture, laundry lines, birdhouses, park play equipment, a pastry cart and cottage accessories. The new props are decorative; the existing sofa interaction remains functional.
+V9 replaces the normal HTML game interface with a compact GPU-rendered glyph/icon HUD. The 32 residents now travel on connected sidewalks, visit the furnished cottage in rotating groups and use a reserved sofa. The V8 world, decorative props and shared rendering assets remain.
 
-The neighborhood currently contains 16 lots, 32 residents, one furnished home, a cafe and two parks. It opens at Clover Cottage. Camera exploration, Tour, Pause, evening lighting, resident following, seeded regeneration, cutaway walls and four saved furniture palettes are available. The scene mixes actual 3D objects with illustrated garden cards.
+This is a finite live-mode prototype, not a full Sims clone. It has 16 lots, one furnished home, a cafe and two parks. There is no build mode, needs system or relationship simulation. Most props remain decorative.
 
-## Run locally
+## Run
 
-Fresh checkout: `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`.
-A packaged checkpoint already includes the renderer: run `node tools/serve.mjs`.
-Open http://127.0.0.1:4173/town/ rather than opening index.html through file://.
+Packaged checkpoint with vendor/: node tools/serve.mjs, then http://127.0.0.1:4173/town/.
+Fresh checkout: npm ci --ignore-scripts; npm run vendor; npm run dev.
 
-## Tests and recovery
+## Controls
 
-`npm test` runs the unit suite. `.github/workflows/v8-review.yml` prepares the exact V7 baseline and runs matched captures and regression checks. Passing screenshots and metrics are committed under `docs/v8-captures/`. Read `HANDOFF.md` and `V8_CHECKPOINT.md` before continuing. Older checkpoint branches remain preserved.
+Drag to pan; pinch/scroll to zoom; right-drag or Q/E to rotate. Select residents by clicking them or using the GPU roster. Space pauses. 1/2/3 change speed. H returns home, R opens the overview, G gathers neighbors, F follows, and X queues sofa use or stands up. Escape opens options.
 
-Main publishes automatically using the existing gh-pages workflow, including public-file hash verification and a live-site WebGL smoke test. Read `HOSTING.md` and check the public deployment manifest for the actual published commit.
+## Verify and continue
 
-This is an independent game experiment, not affiliated with Electronic Arts or Maxis. It is separate from JinJinJenn's profile, mods, Cafe and Farm repositories.
+npm test runs generation, geometry and live-mode tests. node tools/review-v9.mjs runs WebGL/UI acceptance checks after Playwright Chromium is installed. Main automatically publishes through Pages with public-file hash checks and a live-mode browser check.
+
+Read HANDOFF.md and V9_CHECKPOINT.md. Keep old checkpoints intact and save source before long tests. Independent project, not affiliated with EA or Maxis.

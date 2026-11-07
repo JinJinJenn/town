@@ -1,27 +1,14 @@
 name: Validate and package Town
-
 on:
   push:
-    branches: [main, feat/checkpoint-02-interior, feat/checkpoint-03-concept-art]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'tools/**'
-      - 'index.html'
-      - 'style.css'
-      - 'package*.json'
-      - 'playwright.config.mjs'
-      - '.github/workflows/checkpoint.yml'
-      - 'CHECKPOINT.txt'
+    branches: [main]
+    paths: ['src/**', 'tests/**', 'tools/**', 'assets/**', 'index.html', 'package*.json', '.github/workflows/checkpoint.yml']
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: town-checkpoint-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -31,39 +18,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install pinned dependencies
-        run: npm ci --ignore-scripts
-      - name: Prepare the offline renderer
-        run: npm run vendor
-      - name: Check JavaScript and deterministic generation
+      - name: Install pinned dependencies and renderer
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+      - name: Check source and simulation tests
         run: |
           for file in src/*.js tools/*.mjs; do node --check "$file"; done
           npm test
       - name: Install the browser
         run: npx playwright install --with-deps chromium
-      - name: Verify the concept-art renderer
-        run: npx playwright test tests/browser/00-art.spec.js
-      - name: Save the visual review before longer interaction tests
+      - name: Verify the current GPU live-mode interface and phone layouts
+        run: node tools/review-v9.mjs
+      - name: Package source and evidence even when a check fails
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: town-art-preview
-          path: artifacts/
-          if-no-files-found: ignore
-          retention-days: 30
-      - name: Verify rendering, controls, and mobile layout
-        run: npx playwright test tests/browser/home.spec.js tests/browser/town.spec.js
-      - name: Package source and test evidence even when a check fails
-        if: always()
-        shell: bash
         run: |
-          set -euo pipefail
           mkdir -p town-checkpoint
           git archive HEAD | tar -x -C town-checkpoint
-          if [ -d vendor ]; then cp -r vendor town-checkpoint/; fi
-          if [ -d artifacts ]; then cp -r artifacts town-checkpoint/; fi
-          if [ -d test-results ]; then cp -r test-results town-checkpoint/; fi
-          if [ -f package-lock.json ]; then cp package-lock.json town-checkpoint/; fi
+          if [ -d vendor ]; then cp -R vendor town-checkpoint/; fi
+          if [ -d artifacts-v9 ]; then cp -R artifacts-v9 town-checkpoint/; fi
           printf '%s\n' "$GITHUB_SHA" > town-checkpoint/COMMIT.txt
           cd town-checkpoint
           find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
