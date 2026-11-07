@@ -187,7 +187,7 @@ export function enhanceV7Kit(kit){
       for(let j=0;j<6;j++)part(g,'leaf',j%2?'#89b868':'#58a46d',[x-.66+j*.26,.56,-7.55],[.3,.32,.32]);
     }
   };
-  kit.artVersion='07-lived-in-cottage';
+  kit.detailVersion='07-lived-in-cottage';
   return kit;
 }
 
