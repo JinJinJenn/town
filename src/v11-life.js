@@ -39,13 +39,13 @@ export function createHousehold(world){
   function arrive(a){if(a.activeCommand?.kind==='go'){a.route=[];a.cursor=0;a.speed=0;a.state='standing';a.activeCommand=null;a.manualHold=time+60;a.dwell=60;return;}a.route=[];a.cursor=0;a.speed=0;if(a.slot){a.state='settling';a.settle=.7;a.face=a.slot.facing??a.face;a.visits++;a.visitDue=time+55+random()*45;a.priority=false;arrivals++;}else{a.state='enjoying the neighborhood';a.dwell=6+random()*10;a.face=random()*Math.PI*2;}if(a.pending&&!a.slot)a.dwell=0;}
   function startActivity(a){a.activityTime=0;if(a.slot.activity==='tv'){a.state='watching TV';a.face=0;a.dwell=26+random()*16;tvSessions++;}else if(a.slot.activity==='drink'){a.state='having a drink';a.dwell=22+random()*14;drinks++;}else{a.state='waiting for a chat';a.dwell=25;pair(a);}}
   function pair(a){if(a.slot?.activity!=='talk'||a.partner!==null||a.route.length||a.settle>0)return;const other=nav.slots.find(s=>s.activity==='talk'&&s.pair===a.slot.pair&&s.node!==a.slot.node),b=agents[reserved.get(other.node)];if(!b||b.route.length||b.settle>0||b.partner!==null||b.slot?.activity!=='talk')return;
-    a.partner=b.index;b.partner=a.index;a.conversationStart=b.conversationStart=time;a.dwell=b.dwell=18+random()*14;a.state=b.state='talking';a.face=Math.atan2(b.pos.x-a.pos.x,b.pos.z-a.pos.z);b.face=a.face+Math.PI;conversations++;}
+    a.partner=b.index;b.partner=a.index;a.conversationStart=b.conversationStart=time;a.dwell=b.dwell=18+random()*14;a.state=b.state='talking';a.face=Math.atan2(b.pos.x-a.pos.x,b.pos.z-a.pos.z);b.face=a.face+Math.PI;conversations++;for(const c of [a,b])if(c.activeCommand?.kind==='talk')c.activeCommand.conversed=true;}
   function depart(a){const id=free(nav.publicSlots);if(id!==null&&travel(a,id)){departures++;return true;}a.dwell=2;return false;}
   function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(!kind||s.activity===kind)&&!reserved.has(s.node)&&!agents.some(b=>b!==a&&(b.pending===s.activity||b.activeCommand?.kind===s.activity)&&b.index<a.index));if(!choices.length)return null;
     // Finish existing pairs before starting another unpaired conversation.
     const waiting=choices.filter(s=>s.activity==='talk'&&nav.slots.some(t=>t.pair===s.pair&&t.node!==s.node&&reserved.has(t.node)));if(!kind&&waiting.length)choices=waiting;
     return choices[Math.floor(random()*choices.length)];}
-  function decide(a){if(a.activeCommand||a.commands.length){driveCommands(a);return;}if(time<a.manualHold){a.state='standing';a.dwell=Math.min(1,a.manualHold-time);return;}if(a.pending){const slot=chooseSlot(a,a.pending);if(slot&&travel(a,slot.node)){a.pending=null;return;}}
+  function decide(a){if(Number.isInteger(a.invitedBy)){const inviter=agents[a.invitedBy];if(inviter?.activeCommand?.targetIndex===a.index&&!inviter.activeCommand.conversed){a.dwell=.5;return;}a.invitedBy=null;}if(a.activeCommand||a.commands.length){driveCommands(a);return;}if(time<a.manualHold){a.state='standing';a.dwell=Math.min(1,a.manualHold-time);return;}if(a.pending){const slot=chooseSlot(a,a.pending);if(slot&&travel(a,slot.node)){a.pending=null;return;}}
     if(a.slot){depart(a);return;}if(a.priority||time>=a.visitDue){const slot=chooseSlot(a);if(slot){travel(a,slot.node);return;}}
     const id=free(nav.publicSlots);if(id!==null&&id!==a.node)travel(a,id);else a.dwell=1;}
   function animate(a,dt){const r=a.actor,blend=1-Math.exp(-dt*8),sitting=a.slot&&['watching TV','having a drink'].includes(a.state);a.walk+=(clamp(a.speed/1.2,0,1)-a.walk)*blend;a.sit+=(Number(!!sitting)-a.sit)*blend;
@@ -64,9 +64,9 @@ export function createHousehold(world){
     r.meta.description=a.state[0].toUpperCase()+a.state.slice(1)+'.';
   }
   function interrupt(a){
-    release(a);a.pending=null;a.priority=false;a.slot=null;a.settle=0;a.route=[];a.cursor=0;a.speed=0;a.dwell=0;a.state='standing';
+    release(a);a.invitedBy=null;a.pending=null;a.priority=false;a.slot=null;a.settle=0;a.route=[];a.cursor=0;a.speed=0;a.dwell=0;a.state='standing';
   }
-  function finishCommand(a,error=null){a.commandError=error;interrupt(a);a.activeCommand=null;a.manualHold=time+60;a.dwell=60;}
+  function finishCommand(a,error=null){const guest=agents[a.activeCommand?.invited];if(guest?.invitedBy===a.index)interrupt(guest);a.commandError=error;interrupt(a);a.activeCommand=null;a.manualHold=time+60;a.dwell=60;}
   function driveCommands(a){
     if(!a.activeCommand){if(!a.commands.length)return;interrupt(a);a.activeCommand=a.commands.shift();a.activeCommand.started=time;}
     const c=a.activeCommand;
@@ -77,12 +77,12 @@ export function createHousehold(world){
       a.route=Math.hypot(a.pos.x-node(a.node).x,a.pos.y-node(a.node).y,a.pos.z-node(a.node).z)>.001?path:path.slice(1);
       a.route.push(a.goNode);a.cursor=0;a.state='going here';c.destination={x:goal.x,y:goal.y,z:goal.z};return;
     }
-    if(c.startedActivity){finishCommand(a);return;}
+    if(c.startedActivity){if(c.kind==='talk'&&Number.isInteger(c.targetIndex)&&!c.conversed){if(time-c.started<180&&agents[c.targetIndex]?.invitedBy===a.index){a.dwell=.5;return;}finishCommand(a,'The conversation was cancelled.');return;}finishCommand(a);return;}
     let slot;
     if(c.kind==='talk'&&Number.isInteger(c.targetIndex)){
       const b=agents[c.targetIndex];if(!b||b===a){finishCommand(a,'Choose another resident.');return;}
       if(b.activeCommand||b.commands.length){a.state='waiting to chat';a.dwell=.5;if(time-c.started>60)finishCommand(a,'That resident is busy.');return;}
-      for(let pairId=0;pairId<3;pairId++){const pairSlots=nav.slots.filter(s=>s.activity==='talk'&&s.pair===pairId);if(pairSlots.every(s=>!reserved.has(s.node)||reserved.get(s.node)===b.index)){interrupt(b);slot=pairSlots[0];travel(b,pairSlots[1].node);break;}}
+      for(let pairId=0;pairId<3;pairId++){const pairSlots=nav.slots.filter(s=>s.activity==='talk'&&s.pair===pairId);if(pairSlots.every(s=>!reserved.has(s.node)||reserved.get(s.node)===b.index)){interrupt(b);b.invitedBy=a.index;c.invited=b.index;slot=pairSlots[0];travel(b,pairSlots[1].node);break;}}
     }else slot=chooseSlot(a,c.kind);
     if(slot){travel(a,slot.node);c.startedActivity=true;return;}
     a.state='waiting for '+(c.kind==='drink'?'a chair':c.kind==='tv'?'the sofa':'a conversation');a.dwell=.5;
@@ -111,3 +111,5 @@ export function createHousehold(world){
   function stats(){return {time,inside:agents.filter(a=>a.pos.x>world.home.origin.x-5.6&&a.pos.x<world.home.origin.x+5.6&&a.pos.z>world.home.origin.z-4.6&&a.pos.z<world.home.origin.z+4.6).length,chatting:agents.filter(a=>a.partner!==null).length,walking:agents.filter(a=>a.route.length).length,visited:agents.filter(a=>a.visits>0).length,arrivals,departures,gathering,slots:nav.slots.length,conversations,drinks,tvSessions,watching:agents.filter(a=>a.state==='watching TV').length,drinking:agents.filter(a=>a.state==='having a drink').length,pairs:agents.filter(a=>a.partner!==null&&a.index<a.partner).length};}
   return {nav,agents,step,gather,command,cancelCommand,cancelAll,getCommands,requestActivity,requestSit:index=>requestActivity(index,'tv'),stats,doorWanted:()=>agents.some(a=>a.route.length&&Math.abs(a.pos.x-world.home.origin.x)<1&&Math.abs(a.pos.z-world.home.origin.z-4.7)<2.5),dispose(){world.setLiveController(null);reserved.clear();}};
 }
+
+// V11 invitation handshake: wait for both partners; cancelling releases both.

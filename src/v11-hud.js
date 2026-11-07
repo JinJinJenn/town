@@ -59,7 +59,7 @@ export function createLiveHUD(renderer,canvas,onAction){
       const qw=Math.min(bw,420),qx=bx,qy=by-72,cw=(qw-16)/6;
       rect(qx,qy,qw,64,colors.panel,13);text('Actions',qx+10,qy+7,11,colors.muted);
       for(let i=0;i<m.queue.length;i++){const c=m.queue[i],xx=qx+8+i*cw;
-        button('cancel:'+c.id,c.kind==='go'?'Go here':c.kind==='tv'?'TV':c.kind==='drink'?'Drink':'Chat',xx,qy+24,cw-4,32,{active:c.active});
+        button('cancel:'+c.id,c.kind==='go'?'Go here':c.kind==='tv'?'TV':c.kind==='drink'?'Drink':'Chat',xx,qy+24,cw-4,36,{active:c.active,icon:phone?({go:'follow',tv:'tv',drink:'cup',talk:'chat'}[c.kind]):undefined});
         icon('close',xx+cw-15,qy+24,10,c.active?colors.white:colors.muted);
       }
     }
