@@ -12,8 +12,8 @@ export function makeHouseholdNavigation(plan,origin){
   const reachable=new Set([nav.gate]),queue=[nav.gate];for(let i=0;i<queue.length;i++)for(const id of nav.nodes[queue[i]].edges)if(!reachable.has(id)){reachable.add(id);queue.push(id);}
   const nearest=(x,z)=>nav.nodes.filter(n=>n.zone==='home'&&reachable.has(n.id)).reduce((a,b)=>Math.hypot(a.x-origin.x-x,a.z-origin.z-z)<Math.hypot(b.x-origin.x-x,b.z-origin.z-z)?a:b).id;
   const slots=[];
-  const groups=[ [[-4.7,1.9],[-4.7,3.0],[-1.05,1.85],[-1.05,3.05]], [[-.7,-1.3],[-.7,.1],[-2.0,-.35],[-4.75,-.35]], [[-2.4,-2.75],[-1.1,-2.75],[-4.65,-2.6],[-.9,-3.55]] ];
-  for(const [group,points] of groups.entries())for(const [side,[x,z]] of points.entries())slots.push({id:`talk-${group}-${side}`,node:nearest(x,z),activity:'talk',pair:group,group,side,hipY:0});
+  const groups=[nav.homeSlots.slice(0,4),nav.homeSlots.slice(4,8)];
+  for(const [group,nodes] of groups.entries())for(const [side,node] of nodes.entries())slots.push({id:`talk-${group}-${side}`,node,activity:'talk',pair:group,group,side,hipY:0});
   slots.push({id:'tv',node:nav.seat,activity:'tv',facing:0,hipY:HOME_SEAT.hipY});
   for(const [i,x] of [-4.55,-2.05].entries()){
     const approach=nearest(i===0?-4.7:-1.22,-.28),id=nav.nodes.length;
@@ -31,8 +31,9 @@ export function createHousehold(world){
   function claim(a,id){release(a);reserved.set(id,a.index);a.reserved=id;}
   function initial(a,id){a.node=id;a.pos={x:node(id).x,y:node(id).y,z:node(id).z};a.route=[];a.cursor=0;a.slot=byNode.get(id)||null;claim(a,id);a.state=a.slot?'settling':'strolling';a.settle=a.slot?.2:0;a.dwell=a.slot?30:0;a.face=a.slot?.facing??random()*Math.PI*2;}
   for(const r of world.residents){const ring=nav.rings.get(r.lot.id),id=ring[Math.floor(((r.distance%73.76)+73.76)%73.76/73.76*32)],a={actor:r,index:r.meta.index,node:id,pos:{},route:[],cursor:0,state:'strolling',speed:0,stride:r.phase,walk:0,face:r.root.rotation.y,reserved:null,slot:null,partner:null,visits:0,visitDue:5+r.meta.index*.8,dwell:0,settle:0,sit:0,activityTime:0,pending:null,priority:false,conversationStart:0,socialGroup:[],commands:[],activeCommand:null,manualHold:0,commandError:null,goNode:nav.nodes.length};nav.nodes.push({id:a.goNode,x:0,y:0,z:0,zone:'goal',edges:[]});agents.push(a);initial(a,id);}
-  for(let i=0;i<4;i++)initial(agents[i],nav.slots[i].node);
-  initial(agents[4],nav.slots[7].node);initial(agents[5],nav.slots[8].node);initial(agents[20],nav.seat);
+  const talkSlots=nav.slots.filter(s=>s.activity==='talk'),drinkSlots=nav.slots.filter(s=>s.activity==='drink'),tvSlot=nav.slots.find(s=>s.activity==='tv');
+  for(let i=0;i<4;i++)initial(agents[i],talkSlots[i].node);
+  initial(agents[4],drinkSlots[0].node);initial(agents[5],drinkSlots[1].node);initial(agents[20],tvSlot.node);
   for(const a of agents){if(a.slot){a.visits=1;a.visitDue=90;a.settle=0;a.sit=a.slot.activity==='talk'?0:1;startActivity(a);}a.actor.root.rotation.y=a.face;animate(a,0);}
   world.setLiveController({step});
   function travel(a,id){const path=nav.route(a.node,id);if(!path.length)return false;claim(a,id);a.slot=byNode.get(id)||null;a.route=Math.hypot(a.pos.x-node(a.node).x,a.pos.y-node(a.node).y,a.pos.z-node(a.node).z)>.001?path:path.slice(1);a.cursor=0;a.dwell=0;a.settle=0;a.state=a.slot?(a.slot.activity==='tv'?'going to TV':a.slot.activity==='drink'?'going for a drink':'visiting'):'walking';if(!a.route.length)arrive(a);return true;}
