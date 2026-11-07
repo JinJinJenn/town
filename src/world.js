@@ -70,7 +70,7 @@ export function createWorld(kit, seed) {
       if(lot.kind!=='cafe') {kit.tree(garden,-6.7,5.8,r,true,.72);kit.bench(garden,6.8,2.5,-Math.PI/2);}
       else kit.bench(garden,-7.1,0,Math.PI/2);
       for(const side of [-1,1])for(let i=0;i<5;i++) {
-        const x=side*(5.5+r()*.5), z=-5.2+i*1.7;
+        const x=side*(lot.furnished?7.15+r()*.35:5.5+r()*.5), z=-5.2+i*1.7;
         part(garden,'leaf',['#8fa67f','#a1b78c','#b0bd8d'][i%3],[x,.36,z],[.7,.65,.8]);
         if(i%2===0)kit.flowers(garden,x+.4,z+.1,r,3);
       }

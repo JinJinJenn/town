@@ -130,6 +130,7 @@ export function createHome(kit, lot) {
   rounded(bath,'#a7bba9',[2.1,floor+.43,3.9],[1.3,.84,.76]);rounded(bath,'#f2eddf',[2.1,floor+.9,3.9],[1.4,.12,.86]);rounded(bath,'#b2ccc1',[2.1,floor+.97,3.9],[.66,.03,.47]);
   rounded(bath,'#e9e6d9',[2.05,floor+.27,1.75],[.55,.5,.76]);part(bath,'ring','#f6f1e5',[2.05,floor+.55,1.85],[.56,.68,.56],[-Math.PI/2,0,0]);rounded(bath,'#f0eadd',[2.05,floor+.7,1.39],[.59,.6,.23]);
   box(bath,'#9fbdad',[3.1,floor+.04,3.2],[.85,.04,1.4]);plant(bath,3.1,floor+.97,3.9,.6);
+  source.updateMatrixWorld(true);
   const batches={};
   for(const [key,root] of Object.entries({base,inside,roof,...wallRoots,door:doorRoot})){
     batches[key]=kit.compile(root,key==='door');model.add(batches[key].group);
