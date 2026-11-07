@@ -1,56 +1,47 @@
-# Town V7 checkpoint: cottage-first detail and rendering optimization
+# Town V7: combined cottage detail and rendering optimizations
 
-## Resume here
+## Current source
 
-Project: JinJinJenn/town. Public game: https://jinjinjenn.github.io/town/. Do not modify Jenn's separate profile, mods, Cafe or Farm repositories.
+Use `JinJinJenn/town` only. Public game: https://jinjinjenn.github.io/town/. Leave the separate profile, mods, Cafe and Farm repos unchanged.
 
-V7 is actual Three.js code, not the generated concept image. The baseline is V6 commit 01441198963c9ddc9ebdc7ba9fe92a021b7ae56b. V7 integrated runtime is 333b1df1b80e297ed066e9e5b604d3f72ef3d09a; passing screenshots and comparison metrics are committed at a504204b23d0ac327c75a8729c801feb625ba6c9. This documentation update changes no game code. Source branch: feat/checkpoint-07-detail-performance.
+This release reconciles the concurrent detail/performance checkpoint at `1bf150f5313a0422bf18d302b1a905115c0ad4b3` and layered-detail work at `249f975da12a39b663bcb5732cca997106f2a5d9`. Both histories are retained by merge commit `8e4dc089bb3ba1eb3ec99ddd783437277ea40bb0`. The integrated combined runtime is `8a0b61f6823538f262111a5e6dffcfacd947d67c`; final documentation does not change runtime code. Source branch: `feat/checkpoint-07-combined-release`.
 
-## This bounded checkpoint
+Read `V7_COMBINED_HANDOFF.md`, `RELEASE_V7.md` (performance checkpoint) and `RELEASE_V7_LAYERED_DETAIL.md` (additional art pass) for their respective scope. Older checkpoints and full-resolution downloaded art remain preserved.
 
-Town opens directly inside the central Clover Cottage with its roof removed, camera focused and property controls selected. Regenerating the town also returns to the furnished cottage. The neighborhood remains finite: 16 lots, 32 residents, a cafe, two parks and one furnished house. The sofa interaction, editable furniture palettes, cutaway walls, navigation, residents and photo view remain real runtime systems.
+## What the user sees
 
-New art dressing adds 350 small garden flowers plus leaf clusters across the lots (80 around the furnished lot, 18 around each other lot), 36 fence garland clusters, cups and saucers, a table bouquet, book stacks, sofa-end cushions, bathroom towels and candles, and trailing wall-owned vines. The front gate and Luca's central seat remain clear. The existing 96 animated petals remain; this is not a claim of more particle instances.
+The normal URL opens inside the central furnished Clover Cottage in isometric cutaway, roof removed and property controls selected. Reloading and seeded regeneration return to this house. The overview control and R show the town; Tour and Visit Clover Cottage still work. `?view=town` explicitly starts at the overview. This does not add first-person locomotion or a new controllable character.
 
-Three illustrated garden materials are packed into one padded 256x256 atlas and one instanced batch for the same 99 garden cards. Small immutable assemblies merge by compatible material, but dense scenery remains instanced, palette furniture remains editable, and animated actors/doors remain separate. A 90,000-source-vertex ceiling limits merge memory growth. Shared rounded boxes decrease from 192 to 108 triangles and small flower buds from 20 to 8.
+The finite neighborhood retains 16 lots, 32 residents, a cafe, two parks and one furnished home. Real 3D furniture, the sofa round trip, saved palettes, residents, following, cutaway walls and photo-view exit remain functional. Photo view hides UI, not file export.
 
-Directional shadow updates are capped at 10 Hz during ordinary motion, with explicit refresh for cutaway/roof changes, regeneration and evening-light changes. This is shadow-update throttling, NOT a separate baked static-shadow system. A paused, unchanged scene reuses its existing shadow map.
+The art pass adds 204 interior detail instances plus wall-owned panelling, cornices, pleated curtains, botanical frames, kitchen backsplash and utensils, woven rug lines/fringe, quilt stitching, dishes, books, fruit, flowers, baskets, slippers, mirror/towels and bath accessories. It adds 436 deterministic edge planting patches on top of the earlier flower placements, cottage stone edging, fence blooms, two lanterns and two herb beds. The new beds clear the existing raised planter and the front gate/sofa route remain unchanged.
 
-Narrow screens default to a renderer pixel ratio of 1 and soft contact shading off when no explicit saved preference exists. Visitors can enable soft shading in Help. Desktop soft shading is retained. Atlas textures survive regeneration; per-world merge buffers/materials and card resources are disposed.
+48 garden motes and eight cup-steam instances use two shader batches and the simulation clock. Pause stops them; reduced motion and the existing ambient/petal checkbox control them. Steam is hidden with the house closed. The original 96 petals and generated illustrated garden artwork remain. No new generated PNGs were produced in this pass.
 
-## Measured before and after
+## Retained optimization and ownership
 
-Review Town V7 run 42346475232 passed source/unit validation and the focused capture/interaction harness. Matching desktop captures use 1280x800, DPR 1, seed petalwood, the same cottage camera and soft contact shading enabled in both builds.
+The existing 99 illustrated garden cards still use the shared atlas and one instanced batch. Lighter rounded/bud geometry, bounded material merging for small static assemblies, 10 Hz shadow refresh with explicit invalidation, and phone default quality settings remain. Dynamic objects and palette-owned furniture are not flattened into immutable merged meshes. The atmosphere and decorative resources retain explicit disposal paths; missing art textures must not block the 3D game.
 
-- Scene draw calls: V6 63, V7 49 (22.2% fewer).
-- Scene submitted triangles: V6 1,109,514, V7 927,246 (16.4% fewer despite added detail).
-- Illustrated garden batches: 3 to 1.
-- Renderer texture allocations in the desktop capture: 9 to 6.
-- Actual moving-frame GL submissions including shadow and composite passes: 127 to 100 in this software-rendered sample.
-- Actual paused-frame GL submissions: 127 to 50; the shadow map is reused in V7.
+Historical captures in `docs/v7-captures/` measure the earlier performance checkpoint, NOT this denser combined release. Do not repeat their percentage draw/triangle reductions as new measurements. Use the combined review's `artifacts-v7/render.json` and screenshots for this source. Software Chromium is not a hardware FPS benchmark.
 
-The phone captures use a 320x640 CSS viewport and DPR 2, but intentionally compare each version's DEFAULT quality settings, not identical rendering quality. V7 has no default compositor pass there. Software Chromium timings are not hardware FPS benchmarks. Do not turn these draw/triangle reductions into an unsupported percentage FPS claim.
+## Code and validation
 
-All four before/after PNGs and the complete comparison.json are permanently tracked under docs/v7-captures/. The capture harness also checks automatic cottage entry, sofa round trip, palette saves across regeneration, four cutaway directions, atlas/resource reuse, photo-view exit and phone control bounds. The source artifact includes checksums. Legacy browser scripts that hard-code V6 are not the V7 acceptance suite.
+- `src/v7-polish.js` and `src/v7-media.js`: retained optimization and earlier decoration.
+- `src/v7-detail.js`: additive home/garden detail and bounded ambient effects.
+- `src/main.js` / `src/home.js`: integrated lifecycle, startup, palette and cutaway behavior.
+- `tests/v7.test.mjs` and `tests/v7-lived-in.test.mjs`: both unit suites retained.
+- `tests/browser/v7-lived-in.spec.js`: five focused combined browser tests.
+- `.github/workflows/v7-lived-in-review.yml`: combined source-save, validation and archive workflow.
+- `tools/integrate-v7-lived-in.mjs`: guarded idempotent development migration. Native source is already integrated; browsers do not run it.
 
-## Code map and repeatable capture
+The combined suite runs 33 unit tests and five browser tests. Review run: https://github.com/JinJinJenn/town/actions/runs/42347685240. Check its actual final result rather than assuming it passed because this document exists. The browser tests cover actual composited rendering, default home, retained atlas/shadow settings, sofa round trips, pause, saved palettes, following, photo exit, 390/320-pixel controls, rotation, regeneration, reduced motion and missing-art fallback. A focused suite is not a claim that every older version-specific browser test passes.
 
-- src/v7-polish.js: bounded static merging, shared-geometry reduction, garden and interior details.
-- src/v7-media.js: runtime texture atlas and per-instance UV rectangles; reuses V6 art sources.
-- src/main.js and src/home.js: integrated startup, detail and quality behavior.
-- tests/v7.test.mjs: merge ownership/disposal, palette safety, geometry budgets and wall cutaways.
-- tools/capture-v7.mjs: matched V6/V7 capture and GL draw/triangle counters.
-- .github/workflows/v7-review.yml: saves integrated source BEFORE browser work, commits passing evidence, and archives even on failure.
-- tools/integrate-v7.mjs: guarded source migration; not a runtime dependency. Already integrated in accepted source.
+Review workflows may commit integration before testing, so trigger SHA and tested SHA differ. The artifact's COMMIT.txt identifies tested source. Packaged release copies may contain documentation-only changes and record both tested and release commits.
 
-Packaged checkpoint: node tools/serve.mjs, then http://127.0.0.1:4173/town/. Fresh checkout: npm ci --ignore-scripts; npm run vendor; npm run dev. The archive includes the renderer. Do not open index.html via file://.
+## Run and publish
 
-For the comparison, prepare a checkout/archive of the exact V6 baseline with its vendor directory, set BASELINE_ROOT to that directory, install Playwright Chromium, then run node tools/capture-v7.mjs from V7. The GitHub workflow automates this setup. npm test runs the unit suite.
+Packaged source includes the pinned renderer: `node tools/serve.mjs`, then http://127.0.0.1:4173/town/. Fresh checkout: `npm ci --ignore-scripts`, `npm run vendor`, `npm run dev`. Do not use file://.
 
-## Publication and remaining work
+Read HOSTING.md. Main publishes automatically through the existing gh-pages workflow, verifies every public file hash and runs the public WebGL smoke test. The public __deployment.json is the source of truth for the deployed source commit. Do not ask the user to enable Pages again or label a branch save as live.
 
-Read HOSTING.md. Main publishes automatically to gh-pages. Verify the public __deployment.json AND the completed deployment smoke test before calling any new commit live. Do not require the user to configure Pages again. Preserve checkpoint/06-mixed-media and all earlier versions.
-
-V7 is a small code-and-performance checkpoint, not full parity with the lush generated reference. More foliage variety, higher-resolution source art, denser interior storytelling and advanced phone UI can be later bounded batches. Furniture placement, additional furnished homes, sleeping, needs, relationships and infinite streaming are not implemented. Keep the original full-resolution art in the downloaded thread kit; this release reuses the compact V6 image derivatives.
-
-Commit each next change before expensive work and avoid overwriting checkpoint branches. The screenshot comparisons are real browser captures, not image-generation outputs.
+Furniture placement, sleeping, needs, relationships, additional furnished homes and infinite streaming remain unimplemented. Keep copy natural, retain source checkpoints before expensive work, and never force-push over concurrent changes. The imagery in the review is actual gameplay, not concept art.
