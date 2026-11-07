@@ -3,42 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f9f7ec">
-  <meta name="description" content="Explore JinJinJenn's procedural neighborhood, meet its residents, and watch the afternoon go by.">
-  <title>Town · JinJinJenn</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath fill='%23879c79' d='M20 1 38 24 20 47 2 24Z'/%3E%3Cpath fill='%23adc399' d='m20 1 0 46L2 24Z'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#fce8ef">
+  <meta name="description" content="Explore Jenn's pastel neighborhood, meet its residents, and look inside Clover Cottage. Town is a playable 3D experiment by JinJinJenn.">
+  <title>Town v4 · JinJinJenn</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='%23d7789b'%3E%3Cellipse cx='20' cy='12' rx='6' ry='9'/%3E%3Cellipse cx='12' cy='21' rx='9' ry='6'/%3E%3Cellipse cx='28' cy='21' rx='9' ry='6'/%3E%3Cellipse cx='16' cy='28' rx='6' ry='8'/%3E%3Cellipse cx='25' cy='28' rx='6' ry='8'/%3E%3C/g%3E%3Ccircle cx='20' cy='21' r='4' fill='%23ffe1a3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="https://jinjinjenn.github.io/" aria-label="JinJinJenn home"><span class="jewel" aria-hidden="true"></span>JinJinJenn<span class="brand-dot">.</span></a>
-    <nav aria-label="Main navigation"><span class="active" aria-current="page">Town</span><a href="https://jinjinjenn.github.io/#mods">Sims 4 mods</a><a class="desktop" href="https://jinjinjenn.github.io/devlog/">Devlog ↗</a><button id="help" class="round" aria-label="Open controls and project information">?</button></nav>
+    <a class="brand" href="https://jinjinjenn.github.io/" aria-label="JinJinJenn home"><span class="brand-flower" data-icon="flower" aria-hidden="true">✿</span>JinJinJenn<span class="brand-dot">.</span></a>
+    <span class="brand-note">A neighborhood made by Jenn</span>
+    <nav aria-label="Main navigation">
+      <button id="town-tab" class="nav-item active" aria-current="page"><span data-icon="home"></span><span>Town</span></button>
+      <button id="residents" class="nav-item"><span data-icon="people"></span><span>Residents</span></button>
+      <a class="nav-item" href="https://jinjinjenn.github.io/mods/"><span data-icon="book"></span><span>Mods</span></a>
+      <a class="nav-item desktop" href="https://jinjinjenn.github.io/devlog/"><span data-icon="leaf"></span><span>Devlog</span></a>
+    </nav>
+    <div class="header-tools">
+      <button id="photo" class="round" aria-label="Open photo mode" aria-pressed="false" title="Photo mode"><span data-icon="camera"></span></button>
+      <button id="help" class="round" aria-label="Open controls and project information" title="Controls and settings"><span data-icon="settings"></span></button>
+      <button id="about" class="round about-button" aria-label="About Jenn" title="About Jenn">J</button>
+    </div>
   </header>
   <main id="world" aria-label="Interactive 3D neighborhood">
     <canvas id="scene" tabindex="0" aria-label="Town scene. Drag to pan, scroll to zoom, use WASD to move, and Q or E to rotate."></canvas>
-    <button id="visit-home" class="home-shortcut">Visit Clover Cottage <span aria-hidden="true">↗</span></button>
+    <button id="visit-home" class="home-shortcut"><span data-icon="home"></span>Visit Clover Cottage <span aria-hidden="true">↗</span></button>
     <div class="district"><span class="live-dot"></span><strong>Petalwood</strong><span class="divider">/</span><span id="time-label">A quiet afternoon</span></div>
     <section id="welcome" class="card welcome" aria-label="Welcome to Town">
       <button class="close" id="close-welcome" aria-label="Close introduction">×</button>
-      <p class="eyebrow"><span aria-hidden="true">✿</span> JinJinJenn's neighborhood</p>
-      <h1>Welcome to<br><em>Town.</em></h1>
-      <p>Spend an afternoon in Jenn's neighborhood, where the cafe is open, the gardens are in bloom, and the residents are out for a walk.</p>
-      <p>Drag to explore the streets, select a resident to follow them, or visit Clover Cottage to look inside its furnished rooms.</p>
-      <button id="explore" class="primary">Explore the neighborhood <span aria-hidden="true">→</span></button>
-      <a class="mod-link" href="https://jinjinjenn.github.io/#mods">Browse Jenn's Sims 4 mods ↗</a>
-      <p class="card-foot">This first neighborhood is a working visual prototype. More of the town will open up as development continues.</p>
+      <p class="eyebrow"><span data-icon="flower"></span> Welcome to Petalwood</p>
+      <h1>Make yourself<br><em>at home.</em></h1>
+      <p>Come for a walk through Jenn's neighborhood. Stop by the cafe, meet the residents, or look inside Clover Cottage while the afternoon drifts by.</p>
+      <button id="explore" class="primary">Explore Town <span aria-hidden="true">→</span></button>
+      <a class="mod-link" href="https://jinjinjenn.github.io/mods/">Discover Jenn's Sims 4 mods ↗</a>
+      <p class="card-foot">Town is a growing game experiment. You can explore and visit the cottage now; decorating and more resident activities are still being built.</p>
     </section>
     <section id="inspector" class="card inspector" hidden aria-label="Selected resident or building">
       <button class="close" id="close-inspector" aria-label="Close selection">×</button>
       <p id="selection-type" class="eyebrow">Resident</p>
       <h2 id="selection-name"></h2>
+      <div id="home-tags" class="tags" hidden><span>⌂ Clover Cottage</span><span>Furnished</span></div>
       <p id="selection-description"></p>
       <button id="follow" class="primary">Follow this resident</button>
       <button id="open-home" class="primary" hidden>Look inside</button>
-      <div id="home-controls" hidden><p id="home-status" class="home-status" role="status"></p><button id="home-action" class="secondary">Ask Luca to sit</button><p class="small">You can also select the sofa to invite Luca inside.</p></div>
+      <div id="home-controls" hidden><p id="home-status" class="home-status" role="status"></p><button id="home-action" class="secondary">Ask Luca to sit</button><p class="small">Select the sofa or use the button to invite Luca inside.</p></div>
     </section>
-    <div id="loading" class="loading" role="status"><span class="jewel" aria-hidden="true"></span><p>Preparing the neighborhood…</p></div>
-    <div id="error" class="card error" role="alert" hidden><h2>The 3D scene could not start.</h2><p id="error-message"></p><p>The project files and your browser settings are safe. You can still visit Jenn's main website.</p><a href="https://jinjinjenn.github.io/">Visit JinJinJenn ↗</a></div>
+    <div id="loading" class="loading" role="status"><span class="loading-flower" aria-hidden="true">✿</span><p>Opening the garden gates…</p></div>
+    <div id="error" class="card error" role="alert" hidden><h2>The 3D scene could not start.</h2><p id="error-message"></p><p>You can still explore Jenn's mods and projects on the main website.</p><a href="https://jinjinjenn.github.io/mods/">Visit JinJinJenn ↗</a></div>
     <div id="toast" class="toast" role="status" hidden></div>
     <div class="toolbar" role="toolbar" aria-label="Town controls">
       <button id="tour" aria-pressed="false" title="Take a slow camera tour"><span aria-hidden="true">◈</span> Tour</button>
@@ -50,22 +61,38 @@
       <button id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
       <span class="tool-divider"></span><button id="new-town" title="Generate another neighborhood">New town</button>
     </div>
+    <div id="photo-controls" class="photo-controls" hidden><span>You can still move the camera.</span><button id="photo-save" class="primary">Save photo</button><button id="photo-exit" class="secondary">Back to Town</button></div>
     <p class="hint" id="hint">Drag to explore · Scroll to zoom · Select a resident</p>
-    <p class="version"><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> checkpoint 03</p>
+    <p class="version"><span class="live-dot"></span><span id="resident-count">0</span> residents <span aria-hidden="true">·</span> Town v4</p>
   </main>
-  <dialog id="help-dialog">
+  <dialog id="help-dialog" aria-labelledby="help-title">
     <form method="dialog"><button class="close" aria-label="Close help">×</button></form>
-    <p class="eyebrow">About this neighborhood</p><h2>Make yourself at home.</h2>
-    <p>Drag the scene to move around, scroll or pinch to zoom, and right-drag to rotate. On a keyboard, use WASD or the arrow keys to move, Q and E to turn, and R to return to the starting view.</p>
-    <p>Select a resident to follow their walk, or select a building to learn which kind of home the generator created. Tour moves the camera for you, while Pause stops the residents.</p>
-    <p>This checkpoint contains a finite neighborhood with procedural buildings and walking residents. Clover Cottage has the first furnished interior. Use Visit Clover Cottage to look inside, then ask Luca to sit on the sofa. Decorating and an expanding world are not implemented yet.</p>
-    <p><label><input type="checkbox" id="soft-rendering" checked> Use soft contact shading and warm highlight diffusion.</label> Turn this off for lighter rendering on slower devices.</p>
+    <p class="eyebrow">Your visit to Town</p><h2 id="help-title">Settle in.</h2>
+    <p>Drag to explore, scroll or pinch to zoom, and right-drag to rotate. Use WASD or the arrow keys to move, Q and E to turn, and R to reset the camera.</p>
+    <p>Visit Clover Cottage to open the roof and invite Luca onto the sofa. Browse Residents to find someone, or open photo mode to save a picture of the world without the website panels.</p>
+    <div class="settings-group"><label for="quality">Rendering quality</label><select id="quality"><option value="balanced">Balanced</option><option value="sharp">Extra detail</option><option value="light">Lighter rendering</option></select><p class="small">Lighter rendering reduces pixel count. The shading switch below is separate.</p></div>
+    <label class="setting-toggle"><input type="checkbox" id="soft-rendering" checked><span>Use soft contact shading and warm highlight diffusion.</span></label>
+    <label class="setting-toggle"><input type="checkbox" id="petals" checked><span>Let blossom petals drift through the gardens.</span></label>
     <label for="seed">Neighborhood seed</label><div class="seed-row"><input id="seed" maxlength="48" autocomplete="off" spellcheck="false"><button id="load-seed" class="primary">Load</button></div>
-    <p class="small">The same seed produces the same neighborhood. Changes here do not affect Jenn's other games or her website.</p>
+    <p class="small">The same seed recreates the same neighborhood. Town currently has 16 lots and one furnished, interactive home; it is not yet a full life simulator.</p>
     <a href="https://github.com/JinJinJenn/town">View the project on GitHub ↗</a>
   </dialog>
+  <dialog id="residents-dialog" aria-labelledby="residents-title">
+    <form method="dialog"><button class="close" aria-label="Close residents">×</button></form>
+    <p class="eyebrow">Around the neighborhood</p><h2 id="residents-title">Meet your neighbors.</h2>
+    <label for="resident-search">Find a resident</label><input id="resident-search" class="search-field" type="search" placeholder="Search by name" autocomplete="off">
+    <p id="resident-results" class="small" role="status"></p><div id="resident-list" class="resident-list"></div>
+  </dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title">
+    <form method="dialog"><button class="close" aria-label="Close about Jenn">×</button></form>
+    <p class="eyebrow"><span data-icon="flower"></span> About Jenn</p><h2 id="about-title">Hi, I'm Jenn.</h2>
+    <p>I make Sims 4 mods for my own game and share the projects I'm working on. Town is one of those experiments: a place to wander, meet a few residents, and watch a little neighborhood come to life.</p>
+    <p>The workshop on my mods site has details about each project and its testing status. This town is still growing, so the things you can do here will expand as the game develops.</p>
+    <div class="about-links"><a class="primary" href="https://jinjinjenn.github.io/mods/">Visit the mod workshop</a><a class="secondary" href="https://jinjinjenn.github.io/devlog/">Read the devlog ↗</a></div>
+    <p class="small">Town is an independent project and is not affiliated with EA or Maxis.</p>
+  </dialog>
   <script type="module">
-    const fail = (error) => {
+    const fail = error => {
       document.getElementById('loading').hidden = true;
       document.getElementById('error').hidden = false;
       document.getElementById('error-message').textContent = location.protocol === 'file:'
@@ -73,7 +100,7 @@
         : 'Check that WebGL2 is enabled and the vendor files are present. From a fresh Git checkout, run npm install and npm run vendor. Details: ' + (error.message || error);
       console.error(error);
     };
-    import('./src/main.js').then(({ start }) => start()).catch(fail);
+    import('./src/main.js').then(({start}) => start()).catch(fail);
   </script>
 </body>
 </html>
