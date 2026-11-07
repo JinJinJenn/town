@@ -65,7 +65,7 @@ jobs:
             }
           }
           await scan();
-          for (const file of ['index.html', 'style.css', 'src/main.js', 'src/main-v10.js', 'src/v10-hud.js', 'src/v10-life.js', 'src/v10-characters.js', 'src/v10-fixtures.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
+          for (const file of ['index.html', 'style.css', 'src/main.js', 'src/main-v11.js', 'src/v11-hud.js', 'src/v11-life.js', 'src/v11-navigation.js', 'src/v10-characters.js', 'src/v10-fixtures.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
           await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.GITHUB_SHA, files }, null, 2));
           console.log(`Prepared ${Object.keys(files).length} public files with same-origin renderer imports.`);
           NODE
@@ -130,10 +130,10 @@ jobs:
           NODE
       - name: Install the live verification browser
         run: npx playwright install --with-deps chromium
-      - name: Verify V10 household activities on the public website
+      - name: Verify V11 Go here and GPU queue controls on the public website
         env:
           SITE_URL: https://jinjinjenn.github.io/town/
-        run: node tools/review-v10.mjs
+        run: node tools/review-v11.mjs
       - name: Retain public deployment verification
         if: always()
         uses: actions/upload-artifact@v4

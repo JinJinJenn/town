@@ -1,15 +1,21 @@
-# JinJinJenn Town V10
+# JinJinJenn Town V11
 
-A small pink-and-mint neighborhood with a living 3D household and GPU-rendered controls.
+A small pink-and-mint neighborhood with a furnished cutaway cottage, 32 residents and a GPU-rendered live-mode interface.
 
-Play at https://jinjinjenn.github.io/town/. Clover Cottage opens with paired conversations, two residents having drinks and Luca watching television. Neighbors visit, leave and circulate outside.
+Play at https://jinjinjenn.github.io/town/.
 
-Select a person, then click the dining table or TV/sofa for a contextual activity. Space pauses; 1/2/3 set speed; H focuses home; G gathers neighbors; F follows. T or X queues/stops TV; B queues/stops a drink. R shows the neighborhood, Q/E rotate, drag pans, and scroll/pinch zooms. The portrait roster and options are GPU-rendered. There is no build mode.
+V11 makes the household directly controllable. Select a portrait, click clear floor or an accessible sidewalk, and choose **Go here**. Commands appear in a six-action queue; click an action to cancel it. The first player order interrupts autonomous behavior, and later orders run in order. The dining table and television have contextual actions, and clicking another resident offers Chat or Select resident.
 
-## Run and check
+P or 0 pauses, 1/2/3 sets speed, and Space or N selects the next resident. X/Delete cancels the selected resident's actions. Drag to pan, right-drag to rotate, and scroll or pinch to zoom. H returns home and R shows the neighborhood. There is no build mode.
 
-Packaged checkpoint: run `node tools/serve.mjs`, then open http://127.0.0.1:4173/town/. Fresh Git checkout: `npm ci --ignore-scripts`, `npm run vendor`, `npm run dev`. Do not open index.html with file://.
+The scene and visible game interface use WebGL. Contexts, portraits, text and queue controls share one atlas and one HUD batch. The HTML page only hosts the canvas and a fatal-error fallback.
 
-Run `npm test` for unit tests. Install Playwright Chromium, then `node tools/review-v10.mjs` for the focused browser review. `SITE_URL` selects a public-site smoke check. Main publishes through the existing Pages workflow; passing screenshots and review data are tracked in docs/v10-captures/.
+## Run locally
 
-Read HANDOFF.md and V10_CHECKPOINT.md for scope and recovery. This remains a bounded prototype, not a full needs, relationship, job, building or furniture-placement simulation. Normal visible UI is WebGL; HTML only hosts the canvas and error fallback.
+The downloadable checkpoint includes the renderer: run `node tools/serve.mjs`, then open `http://127.0.0.1:4173/town/`. A fresh checkout needs `npm ci --ignore-scripts` and `npm run vendor` first. Do not open index.html directly with file://.
+
+Run `npm test` for the unit suite. Install Playwright Chromium and run `node tools/review-v11.mjs` for real browser input and layout checks. Accepted screenshots and review counters are in `docs/v11-captures/`.
+
+Read `HANDOFF.md` and `V11_CHECKPOINT.md` before continuing. Keep changes bounded and checkpoint them before expensive tests. Main deploys automatically through the established Pages workflow; deployment must be verified separately from a successful source commit.
+
+This is a simplified live-mode prototype, not a full life simulator. Only Clover Cottage is furnished and walkable inside. Needs, jobs, relationships and build/buy systems are not implemented. Most neighborhood props remain decorative. Town is not affiliated with EA or Maxis.

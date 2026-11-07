@@ -28,15 +28,15 @@ jobs:
           npm test
       - name: Install the browser
         run: npx playwright install --with-deps chromium
-      - name: Verify household activities, GPU portraits and phone layouts
-        run: node tools/review-v10.mjs
+      - name: Verify player commands, GPU queues and phone taps
+        run: node tools/review-v11.mjs
       - name: Package source and evidence even when a check fails
         if: always()
         run: |
           mkdir -p town-checkpoint
           git archive HEAD | tar -x -C town-checkpoint
           if [ -d vendor ]; then cp -R vendor town-checkpoint/; fi
-          if [ -d artifacts-v10 ]; then cp -R artifacts-v10 town-checkpoint/; fi
+          if [ -d artifacts-v11 ]; then cp -R artifacts-v11 town-checkpoint/; fi
           printf '%s\n' "$GITHUB_SHA" > town-checkpoint/COMMIT.txt
           cd town-checkpoint
           find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
