@@ -1,0 +1,916 @@
+{
+  "commit": "fedc014e14b22dc69789b2cd67318ae66df05c04",
+  "live": false,
+  "note": "Real WebGL input and screenshots. Software Chromium is not a hardware FPS benchmark.",
+  "cases": [
+    {
+      "name": "desktop",
+      "initial": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 17,
+        "v8Props": {
+          "version": 8,
+          "exterior": 105,
+          "interior": 8,
+          "total": 113,
+          "types": [
+            "beehive",
+            "birdbath",
+            "birdhouse",
+            "bistro",
+            "cactus",
+            "chess",
+            "clothesline",
+            "doghouse",
+            "easel",
+            "firewood",
+            "grill",
+            "hoseReel",
+            "keyRack",
+            "laundry",
+            "lounger",
+            "mushrooms",
+            "pastryCart",
+            "petBowls",
+            "picnic",
+            "pottingBench",
+            "produceCrate",
+            "pumpkins",
+            "radio",
+            "rangeHood",
+            "recycleBins",
+            "sandbox",
+            "swing",
+            "terrarium",
+            "tissueBox",
+            "toaster",
+            "tomatoes",
+            "toyWagon",
+            "wallClock",
+            "wateringCan",
+            "wheelbarrow",
+            "windSpinner"
+          ],
+          "typeCount": 36
+        },
+        "petalInstances": 96,
+        "v7Effects": 56,
+        "version": 11,
+        "frames": 12,
+        "seed": "petalwood",
+        "speed": 1,
+        "paused": false,
+        "pixelRatio": 1,
+        "softRendering": true,
+        "shadowRefreshHz": 10,
+        "drawCalls": 57,
+        "triangles": 1058204,
+        "hudDrawCalls": 1,
+        "geometries": 25,
+        "textures": 7,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "live": {
+          "time": 0.33329999999999993,
+          "inside": 7,
+          "chatting": 4,
+          "walking": 25,
+          "visited": 7,
+          "arrivals": 0,
+          "departures": 0,
+          "gathering": false,
+          "slots": 9,
+          "conversations": 2,
+          "drinks": 2,
+          "tvSessions": 1,
+          "watching": 1,
+          "drinking": 2,
+          "pairs": 2
+        },
+        "gpuHUD": {
+          "drawCalls": 1,
+          "glyphAtlasUploads": 1,
+          "portraitAtlasBuilds": 1,
+          "portraitCount": 32,
+          "context": null,
+          "textureSize": [
+            1024,
+            512
+          ],
+          "vertices": 400,
+          "controls": [
+            {
+              "id": "panel",
+              "label": "Live mode",
+              "x": 18,
+              "y": 665,
+              "w": 680,
+              "h": 122
+            },
+            {
+              "id": "follow",
+              "label": "Follow",
+              "x": 251,
+              "y": 681,
+              "w": 36,
+              "h": 36
+            },
+            {
+              "id": "resident:20",
+              "label": "Luca",
+              "x": 308,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:0",
+              "label": "Mia",
+              "x": 370,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:1",
+              "label": "Theo",
+              "x": 432,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:2",
+              "label": "June",
+              "x": 494,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:3",
+              "label": "Robin",
+              "x": 556,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:4",
+              "label": "Poppy",
+              "x": 618,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "pause",
+              "label": "Pause / play",
+              "x": 308,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "1",
+              "label": "1",
+              "x": 354,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "2",
+              "label": "2",
+              "x": 400,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "3",
+              "label": "3",
+              "x": 446,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "home",
+              "label": "home",
+              "x": 492,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "gather",
+              "label": "Gather neighbors",
+              "x": 538,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "roster",
+              "label": "Residents",
+              "x": 584,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "menu",
+              "label": "Options",
+              "x": 630,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            }
+          ],
+          "menu": ""
+        },
+        "following": null,
+        "palette": "roseMint"
+      },
+      "arrived": {
+        "index": 20,
+        "name": "Luca",
+        "state": "standing",
+        "visits": 1,
+        "node": 1351,
+        "destination": null,
+        "position": [
+          10.799999573185282,
+          0.706,
+          13.899999848472739
+        ],
+        "routeLength": 0,
+        "speed": 0,
+        "partner": null,
+        "appearance": {
+          "skin": "#efc6a0",
+          "shirt": "#559d92",
+          "hair": "#aa743e",
+          "pants": "#596c79",
+          "style": 0,
+          "hat": false,
+          "glasses": false
+        },
+        "commands": [],
+        "error": null,
+        "logicalPosition": {
+          "x": 10.799999573185282,
+          "y": 0.706,
+          "z": 13.899999848472739
+        }
+      },
+      "final": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 17,
+        "v8Props": {
+          "version": 8,
+          "exterior": 105,
+          "interior": 8,
+          "total": 113,
+          "types": [
+            "beehive",
+            "birdbath",
+            "birdhouse",
+            "bistro",
+            "cactus",
+            "chess",
+            "clothesline",
+            "doghouse",
+            "easel",
+            "firewood",
+            "grill",
+            "hoseReel",
+            "keyRack",
+            "laundry",
+            "lounger",
+            "mushrooms",
+            "pastryCart",
+            "petBowls",
+            "picnic",
+            "pottingBench",
+            "produceCrate",
+            "pumpkins",
+            "radio",
+            "rangeHood",
+            "recycleBins",
+            "sandbox",
+            "swing",
+            "terrarium",
+            "tissueBox",
+            "toaster",
+            "tomatoes",
+            "toyWagon",
+            "wallClock",
+            "wateringCan",
+            "wheelbarrow",
+            "windSpinner"
+          ],
+          "typeCount": 36
+        },
+        "petalInstances": 96,
+        "v7Effects": 56,
+        "version": 11,
+        "frames": 78,
+        "seed": "petalwood",
+        "speed": 0,
+        "paused": true,
+        "pixelRatio": 1,
+        "softRendering": true,
+        "shadowRefreshHz": 10,
+        "drawCalls": 57,
+        "triangles": 1058204,
+        "hudDrawCalls": 1,
+        "geometries": 25,
+        "textures": 7,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "live": {
+          "time": 35.533300000000395,
+          "inside": 2,
+          "chatting": 0,
+          "walking": 27,
+          "visited": 7,
+          "arrivals": 1,
+          "departures": 5,
+          "gathering": false,
+          "slots": 9,
+          "conversations": 2,
+          "drinks": 3,
+          "tvSessions": 1,
+          "watching": 0,
+          "drinking": 1,
+          "pairs": 0
+        },
+        "gpuHUD": {
+          "drawCalls": 1,
+          "glyphAtlasUploads": 1,
+          "portraitAtlasBuilds": 1,
+          "portraitCount": 32,
+          "context": null,
+          "textureSize": [
+            1024,
+            512
+          ],
+          "vertices": 360,
+          "controls": [
+            {
+              "id": "panel",
+              "label": "Live mode",
+              "x": 18,
+              "y": 665,
+              "w": 680,
+              "h": 122
+            },
+            {
+              "id": "follow",
+              "label": "Follow",
+              "x": 251,
+              "y": 681,
+              "w": 36,
+              "h": 36
+            },
+            {
+              "id": "resident:20",
+              "label": "Luca",
+              "x": 308,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:5",
+              "label": "Alex",
+              "x": 370,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:0",
+              "label": "Mia",
+              "x": 432,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:1",
+              "label": "Theo",
+              "x": 494,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:2",
+              "label": "June",
+              "x": 556,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "resident:3",
+              "label": "Robin",
+              "x": 618,
+              "y": 675,
+              "w": 46,
+              "h": 55
+            },
+            {
+              "id": "pause",
+              "label": "Pause / play",
+              "x": 308,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "1",
+              "label": "1",
+              "x": 354,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "2",
+              "label": "2",
+              "x": 400,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "3",
+              "label": "3",
+              "x": 446,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "home",
+              "label": "home",
+              "x": 492,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "gather",
+              "label": "Gather neighbors",
+              "x": 538,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "roster",
+              "label": "Residents",
+              "x": 584,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            },
+            {
+              "id": "menu",
+              "label": "Options",
+              "x": 630,
+              "y": 739,
+              "w": 39,
+              "h": 34
+            }
+          ],
+          "menu": ""
+        },
+        "following": null,
+        "palette": "roseMint"
+      },
+      "passed": true
+    },
+    {
+      "name": "touch-390",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 17,
+        "v8Props": {
+          "version": 8,
+          "exterior": 105,
+          "interior": 8,
+          "total": 113,
+          "types": [
+            "beehive",
+            "birdbath",
+            "birdhouse",
+            "bistro",
+            "cactus",
+            "chess",
+            "clothesline",
+            "doghouse",
+            "easel",
+            "firewood",
+            "grill",
+            "hoseReel",
+            "keyRack",
+            "laundry",
+            "lounger",
+            "mushrooms",
+            "pastryCart",
+            "petBowls",
+            "picnic",
+            "pottingBench",
+            "produceCrate",
+            "pumpkins",
+            "radio",
+            "rangeHood",
+            "recycleBins",
+            "sandbox",
+            "swing",
+            "terrarium",
+            "tissueBox",
+            "toaster",
+            "tomatoes",
+            "toyWagon",
+            "wallClock",
+            "wateringCan",
+            "wheelbarrow",
+            "windSpinner"
+          ],
+          "typeCount": 36
+        },
+        "petalInstances": 96,
+        "v7Effects": 56,
+        "version": 11,
+        "frames": 48,
+        "seed": "petalwood",
+        "speed": 0,
+        "paused": true,
+        "pixelRatio": 1,
+        "softRendering": false,
+        "shadowRefreshHz": 10,
+        "drawCalls": 57,
+        "triangles": 1058204,
+        "hudDrawCalls": 1,
+        "geometries": 24,
+        "textures": 5,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "live": {
+          "time": 0.4999999999999999,
+          "inside": 7,
+          "chatting": 4,
+          "walking": 25,
+          "visited": 7,
+          "arrivals": 0,
+          "departures": 0,
+          "gathering": false,
+          "slots": 9,
+          "conversations": 2,
+          "drinks": 2,
+          "tvSessions": 1,
+          "watching": 0,
+          "drinking": 2,
+          "pairs": 2
+        },
+        "gpuHUD": {
+          "drawCalls": 1,
+          "glyphAtlasUploads": 1,
+          "portraitAtlasBuilds": 1,
+          "portraitCount": 32,
+          "context": null,
+          "textureSize": [
+            1024,
+            512
+          ],
+          "vertices": 288,
+          "controls": [
+            {
+              "id": "panel",
+              "label": "Live mode",
+              "x": 8,
+              "y": 550,
+              "w": 374,
+              "h": 140
+            },
+            {
+              "id": "follow",
+              "label": "Follow",
+              "x": 333,
+              "y": 563,
+              "w": 36,
+              "h": 36
+            },
+            {
+              "id": "pause",
+              "label": "Pause / play",
+              "x": 18,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "1",
+              "label": "1",
+              "x": 62.25,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "2",
+              "label": "2",
+              "x": 106.5,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "3",
+              "label": "3",
+              "x": 150.75,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "home",
+              "label": "home",
+              "x": 195,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "gather",
+              "label": "Gather neighbors",
+              "x": 239.25,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "roster",
+              "label": "Residents",
+              "x": 283.5,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            },
+            {
+              "id": "menu",
+              "label": "Options",
+              "x": 327.75,
+              "y": 631,
+              "w": 41.25,
+              "h": 40
+            }
+          ],
+          "menu": ""
+        },
+        "following": null,
+        "palette": "roseMint"
+      },
+      "passed": true
+    },
+    {
+      "name": "touch-320",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 17,
+        "v8Props": {
+          "version": 8,
+          "exterior": 105,
+          "interior": 8,
+          "total": 113,
+          "types": [
+            "beehive",
+            "birdbath",
+            "birdhouse",
+            "bistro",
+            "cactus",
+            "chess",
+            "clothesline",
+            "doghouse",
+            "easel",
+            "firewood",
+            "grill",
+            "hoseReel",
+            "keyRack",
+            "laundry",
+            "lounger",
+            "mushrooms",
+            "pastryCart",
+            "petBowls",
+            "picnic",
+            "pottingBench",
+            "produceCrate",
+            "pumpkins",
+            "radio",
+            "rangeHood",
+            "recycleBins",
+            "sandbox",
+            "swing",
+            "terrarium",
+            "tissueBox",
+            "toaster",
+            "tomatoes",
+            "toyWagon",
+            "wallClock",
+            "wateringCan",
+            "wheelbarrow",
+            "windSpinner"
+          ],
+          "typeCount": 36
+        },
+        "petalInstances": 96,
+        "v7Effects": 56,
+        "version": 11,
+        "frames": 47,
+        "seed": "petalwood",
+        "speed": 0,
+        "paused": true,
+        "pixelRatio": 1,
+        "softRendering": false,
+        "shadowRefreshHz": 10,
+        "drawCalls": 57,
+        "triangles": 1058204,
+        "hudDrawCalls": 1,
+        "geometries": 24,
+        "textures": 5,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "live": {
+          "time": 0.4666,
+          "inside": 7,
+          "chatting": 4,
+          "walking": 25,
+          "visited": 7,
+          "arrivals": 0,
+          "departures": 0,
+          "gathering": false,
+          "slots": 9,
+          "conversations": 2,
+          "drinks": 2,
+          "tvSessions": 1,
+          "watching": 0,
+          "drinking": 2,
+          "pairs": 2
+        },
+        "gpuHUD": {
+          "drawCalls": 1,
+          "glyphAtlasUploads": 1,
+          "portraitAtlasBuilds": 1,
+          "portraitCount": 32,
+          "context": null,
+          "textureSize": [
+            1024,
+            512
+          ],
+          "vertices": 288,
+          "controls": [
+            {
+              "id": "panel",
+              "label": "Live mode",
+              "x": 8,
+              "y": 550,
+              "w": 304,
+              "h": 140
+            },
+            {
+              "id": "follow",
+              "label": "Follow",
+              "x": 263,
+              "y": 563,
+              "w": 36,
+              "h": 36
+            },
+            {
+              "id": "pause",
+              "label": "Pause / play",
+              "x": 18,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "1",
+              "label": "1",
+              "x": 53.5,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "2",
+              "label": "2",
+              "x": 89,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "3",
+              "label": "3",
+              "x": 124.5,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "home",
+              "label": "home",
+              "x": 160,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "gather",
+              "label": "Gather neighbors",
+              "x": 195.5,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "roster",
+              "label": "Residents",
+              "x": 231,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            },
+            {
+              "id": "menu",
+              "label": "Options",
+              "x": 266.5,
+              "y": 631,
+              "w": 32.5,
+              "h": 40
+            }
+          ],
+          "menu": ""
+        },
+        "following": null,
+        "palette": "roseMint"
+      },
+      "passed": true
+    },
+    {
+      "name": "regeneration-missing-art",
+      "passed": true
+    }
+  ],
+  "passed": true
+}
