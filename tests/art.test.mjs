@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPlan } from '../src/plan.js';
-import { enhanceKit, plantingPlan } from '../src/art.js';
+import { enhanceKit, plantingPlan, raisedBedPlan } from '../src/art.js';
 import { createKit } from '../src/kit.js';
 import { createWorld } from '../src/world.js';
 import { createArtWorld } from '../src/art-world.js';
@@ -14,6 +14,8 @@ test('planting is deterministic and leaves gates, sidewalks and house footprints
       assert.ok(Math.abs(bed.x)+radius<8.2 && Math.abs(bed.z)+radius<8.2);
       assert.ok(Math.abs(bed.x)-radius>1.25,'keep the central entrance route clear');
       if(lot.kind!=='park'){
+        const benchX=lot.kind==='cafe'?-7.1:6.8,benchZ=lot.kind==='cafe'?0:2.5;
+        assert.ok(Math.abs(bed.x-benchX)>radius+.4||Math.abs(bed.z-benchZ)>radius+1.35,'flowers must not cover the bench');
         const outsideX=Math.abs(bed.x)-radius>lot.width/2+.1;
         const outsideZ=bed.z-radius>lot.depth/2-1+.1 || bed.z+radius < -lot.depth/2-1-.1;
         assert.ok(outsideX||outsideZ,'flower beds must not occupy a house');
@@ -43,4 +45,13 @@ test('the art layer preserves world plans and stays within finite geometry budge
     world.step(.05);assert.equal(kit.artTime.value,.05);world.dispose();
     assert.equal(world.group.children.length,0);
   }finally{globalThis.document=oldDocument;}
+});
+
+test('raised planters clear both the house and the pine trunk',()=>{
+  const bed=raisedBedPlan();
+  for(const lot of createPlan('petalwood').lots.filter(l=>l.kind!=='park')){
+    assert.ok(bed.z+.51 < -1-lot.depth/2-.1);
+    assert.ok(bed.x+bed.width/2+.12 < 6.7-1.0);
+    assert.ok(Math.abs(bed.z)+.51 < 8.2);
+  }
 });

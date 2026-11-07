@@ -31,3 +31,21 @@ test('the concept-art renderer works in both quality modes without changing the 
   const final=await page.evaluate(()=>townDebug.getStats());expect(errors).toEqual([]);
   await writeFile('artifacts/art-validation.json',JSON.stringify({initial,final,errors,notes:'Real WebGL via software Chromium. Screenshots need visual review; not a hardware FPS benchmark.'},null,2));
 });
+
+test('devices without floating-point color targets retain the ordinary renderer',async({page})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{
+    const original=WebGL2RenderingContext.prototype.getExtension;
+    WebGL2RenderingContext.prototype.getExtension=function(name){
+      if(name==='EXT_color_buffer_float')return null;
+      return original.call(this,name);
+    };
+  });
+  await page.goto('/town/?seed=petalwood');
+  await page.waitForFunction(()=>window.townDebug?.getStats().frames>2,null,{timeout:90000});
+  const stats=await page.evaluate(()=>townDebug.getStats());
+  expect(stats.softRendering).toBe(false);expect(stats.compositeCalls).toBe(0);
+  expect(stats.triangles).toBeGreaterThan(10000);expect(stats.residents).toBe(32);
+  await page.locator('#help').click();await expect(page.locator('#soft-rendering')).toBeDisabled();
+  expect(errors).toEqual([]);
+});

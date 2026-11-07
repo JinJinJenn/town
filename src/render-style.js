@@ -1,13 +1,14 @@
 import * as THREE from '../vendor/three.module.js';
 
 export function createArtLighting(scene, renderer, kit) {
+  renderer.shadowMap.type=THREE.PCFShadowMap;
   const sky=new THREE.HemisphereLight('#e9efff','#a69c83',1.15);
   const sun=new THREE.DirectionalLight('#ffe4cd',2.65);
   const fill=new THREE.DirectionalLight('#efdae7',.42);
   sun.position.set(-42,58,32);fill.position.set(48,28,-35);sun.castShadow=true;
   const size=innerWidth<700?1024:2048;sun.shadow.mapSize.set(size,size);
   Object.assign(sun.shadow.camera,{left:-76,right:76,top:76,bottom:-76,near:1,far:180});
-  sun.shadow.bias=-.00012;sun.shadow.normalBias=.045;sun.shadow.intensity=.83;
+  sun.shadow.bias=-.00012;sun.shadow.normalBias=.045;sun.shadow.intensity=.78;sun.shadow.radius=2.8;
   scene.add(sky,sun,sun.target,fill);
   function apply(evening=false){
     sky.color.set(evening?'#becdeb':'#e9efff');sky.groundColor.set(evening?'#8e8297':'#a69c83');sky.intensity=evening?.85:1.15;
@@ -87,13 +88,14 @@ export function createDioramaRenderer(renderer) {
   });
   const scene=new THREE.Scene(),camera=new THREE.Camera(),geometry=new THREE.PlaneGeometry(2,2);
   const quad=new THREE.Mesh(geometry,material);quad.frustumCulled=false;scene.add(quad);
-  const size=new THREE.Vector2();let enabled=true,width=0,height=0;
+  const size=new THREE.Vector2();let enabled=halfFloat,width=0,height=0;
   const stats={drawCalls:0,triangles:0};
   function capture(){stats.drawCalls=renderer.info.render.calls;stats.triangles=renderer.info.render.triangles;}
   return {
     stats,
     get enabled(){return enabled;},
-    setEnabled(value){enabled=!!value;},
+    get supported(){return halfFloat;},
+    setEnabled(value){enabled=halfFloat&&!!value;},
     render(world,view){
       if(!enabled){renderer.setRenderTarget(null);renderer.render(world,view);capture();return;}
       renderer.getDrawingBufferSize(size);

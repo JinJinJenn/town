@@ -10,11 +10,18 @@ export function plantingPlan(lot) {
     for (const x of [-7.1, 7.1]) for (const z of [-4.6, -2.4, 2.6, 4.5]) beds.push({x,z,size:.8+r()*.2});
     for (const x of [-4.2,-2,2.2,4.2]) beds.push({x,z:-7.1,size:.75+r()*.2});
   } else {
-    for (const x of [-7.05,7.05]) for (const z of [-4.5,-2.1,.3,2.7,5.1]) beds.push({x,z,size:.72+r()*.16});
+    for (const x of [-7.05,7.05]) for (const z of [-4.5,-2.1,.3,2.7,5.1]) {
+      // Benches need a clear seat and approach, even before they are interactive.
+      if(lot.kind==='cafe' && x<0 && Math.abs(z)<1.6)continue;
+      if(lot.kind!=='cafe' && x>0 && z>1 && z<4)continue;
+      beds.push({x,z,size:.72+r()*.16});
+    }
     for (const x of [-5.9,-3.7,3.7,5.9]) beds.push({x,z:7.25,size:.68+r()*.1});
   }
   return beds;
 }
+
+export function raisedBedPlan(){return {x:4.25,z:-7.25,width:1.75};}
 
 export function enhanceKit(kit) {
   const {part,box,ball,cyl,beam,group,shadow} = kit;
@@ -153,7 +160,7 @@ export function enhanceKit(kit) {
   function umbrella(g,x,z,color='#d49aa9'){
     const u=group(g,x,0,z);
     cyl(u,'#b79e7e',[0,1.68,0],[.065,3.36,.065]);cyl(u,'#b8a98d',[0,.06,0],[.5,.12,.5]);
-    for(let i=0;i<12;i++)part(u,'canopy',i%2?'#f5e5d3':color,[0,3.15,0],[3.1,1.4,3.1],[0,i*Math.PI/6,0],'cloth');
+    for(let i=0;i<12;i++)part(u,'canopy',i%2?'#f5e5d3':color,[0,3.15,0],[2.5,1.4,2.5],[0,i*Math.PI/6,0],'cloth');
     ball(u,'#d6b38e',[0,3.49,0],[.11,.14,.11]);
   }
   function planterBed(g,x,z,r,width=2.2){
@@ -180,7 +187,7 @@ export function enhanceKit(kit) {
     part(b,'box','#ebd4a7',[0,h+.64,d/2+.12],[.63,.71,.035],[0,0,0],'glass');
     box(b,p.trim,[0,h+.64,d/2+.15],[.05,.72,.04]);box(b,p.trim,[0,h+.64,d/2+.15],[.65,.05,.04]);
     if(lot.kind==='cafe'){
-      umbrella(b,-3.35,d/2+2.65);umbrella(b,3.35,d/2+2.65,'#ddadba');
+      umbrella(b,-3.35,d/2+3.35);umbrella(b,3.35,d/2+3.35,'#ddadba');
       const aw=w+.25;
       for(let i=0;i<24;i++){
         const x=-aw/2+(i+.5)*aw/24;
@@ -240,8 +247,17 @@ export function enhanceKit(kit) {
       for(const s of [-1,1])planterBed(g,s*4.3,6.8,r,2.3);
     }else{
       if(!lot.furnished)facadeDetail(g,lot);
+      // Low continuous borders tie the individual flowers together. These stay
+      // against the fence, outside the benches and away from the central gate.
+      for(const side of [-1,1]){
+        part(g,'round','#819867',[side*7.78,.23,.4],[.55,.45,13.5]);
+        part(g,'round','#91a571',[side*4.9,.2,7.82],[5.4,.38,.47]);
+        for(let i=0;i<9;i++){
+          foliage(g,i%2?'#92a876':'#9eb17e',[side*7.75,.45,-5.4+i*1.36],[.62,.42,.85],i);
+        }
+      }
       // Vegetable beds sit beside the house, never across the entrance route.
-      planterBed(g,6.85,-6.7,r,1.75);
+      const raised=raisedBedPlan();planterBed(g,raised.x,raised.z,r,raised.width);
       if(lot.furnished)kit.bicycle(g,-6.65,6.4,.45);
       for(const x of [-2.1,2.1]){
         cyl(g,'#9f856c',[x,.6,7.3],[.08,1.2,.08]);part(g,'round','#ffe4b4',[x,1.23,7.3],[.22,.3,.22],[0,0,0],'lantern');

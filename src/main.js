@@ -15,7 +15,7 @@ export function start() {
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(6,0,4), kit=enhanceKit(createKit());
+  const target=new THREE.Vector3(0,0,-2), kit=enhanceKit(createKit());
   const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
   let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);
@@ -42,7 +42,7 @@ export function start() {
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(host);resize();updateCamera();
   function setTour(value){touring=value;$('tour').setAttribute('aria-pressed',String(value));if(value){setHomeOpen(false,false);following=null;tourClock=0;$('follow').textContent='Follow this resident';}}
   function manual(){setTour(false);following=null;$('follow').textContent='Follow this resident';}
-  function resetCamera(){setHomeOpen(false,false);manual();target.set(6,0,4);viewHeight=innerWidth<700?55:44;yaw=.76;elevation=.69;refreshProjection();}
+  function resetCamera(){setHomeOpen(false,false);manual();target.set(0,0,-2);viewHeight=innerWidth<700?55:44;yaw=.76;elevation=.69;refreshProjection();}
   function zoom(factor){manual();viewHeight=clamp(viewHeight*factor,12,100);refreshProjection();}
   function pan(dx,dy){
     const units=viewHeight/Math.max(1,host.clientHeight),rightX=Math.cos(yaw),rightZ=-Math.sin(yaw),forwardX=Math.sin(yaw),forwardZ=Math.cos(yaw);
@@ -102,7 +102,9 @@ export function start() {
     try{const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState(null,'',url);}catch{}
     resetCamera();toast(`The neighborhood is ready. Its seed is ${seed}.`);
   }
-  $('soft-rendering').checked=load('town.softRendering.v1')!=='0';
+  $('soft-rendering').checked=compositor.supported&&load('town.softRendering.v1')!=='0';
+  $('soft-rendering').disabled=!compositor.supported;
+  if(!compositor.supported)$('soft-rendering').title='This device uses the standard renderer because floating-point render targets are unavailable.';
   compositor.setEnabled($('soft-rendering').checked);
   $('soft-rendering').onchange=()=>{compositor.setEnabled($('soft-rendering').checked);save('town.softRendering.v1',compositor.enabled?'1':'0');};
   $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
@@ -152,7 +154,7 @@ export function start() {
   function frame(now){
     const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;clock+=dt;
     if(!paused)world.step(dt);
-    if(touring){tourClock+=dt;const speed=reduced?.45:1;target.x=6+Math.sin(tourClock*.065*speed)*11;target.z=4+Math.sin(tourClock*.046*speed)*10;yaw=.76+Math.sin(tourClock*.035*speed)*.1;}
+    if(touring){tourClock+=dt;const speed=reduced?.45:1;target.x=Math.sin(tourClock*.065*speed)*11;target.z=-2+Math.sin(tourClock*.046*speed)*10;yaw=.76+Math.sin(tourClock*.035*speed)*.1;}
     if(following!==null){const actor=world.residents[following];if(actor)target.lerp(new THREE.Vector3(actor.root.position.x,0,actor.root.position.z),1-Math.exp(-dt*3));}
     const move=dt*180;
     if(keys.has('w')||keys.has('arrowup'))pan(0,move);if(keys.has('s')||keys.has('arrowdown'))pan(0,-move);
