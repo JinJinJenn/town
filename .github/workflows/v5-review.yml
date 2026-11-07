@@ -1,0 +1,57 @@
+name: Review Town V5
+on:
+  push:
+    branches: [feat/checkpoint-05-rose-mint]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v5-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Integrate the guarded V5 source and save it before testing
+        run: |
+          node tools/integrate-v5.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.js src/home.js src/home-polish.js src/v4-ui.js src/v5.css index.html package.json package-lock.json tests/browser/v4.spec.js tests/browser/00-art.spec.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v5): activate Rose Mint materials, four cottage palettes and pink-green interface'
+            git push origin HEAD:feat/checkpoint-05-rose-mint
+          fi
+      - name: Install and validate the source
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify real rendering, saved palettes, sofa interactions and phone layouts
+        run: npx playwright test tests/browser/v5.spec.js
+      - name: Package source and evidence even on failure
+        if: always()
+        run: |
+          mkdir -p town-v5-checkpoint
+          git archive HEAD | tar -x -C town-v5-checkpoint
+          if [ -d vendor ]; then cp -R vendor town-v5-checkpoint/; fi
+          if [ -d artifacts-v5 ]; then cp -R artifacts-v5 town-v5-checkpoint/; fi
+          if [ -d test-results ]; then cp -R test-results town-v5-checkpoint/; fi
+          git rev-parse HEAD > town-v5-checkpoint/COMMIT.txt
+          cd town-v5-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v5-checkpoint
+          path: town-v5-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
