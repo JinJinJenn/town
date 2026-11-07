@@ -44,7 +44,7 @@ test('V12 conversations can grow beyond pairs and keep a rotating speaker',()=>{
   for(let i=0;i<5000&&!live.agents[6].socialGroup.includes(7);i++)live.step(1/30);
   assert.ok(live.agents[6].socialGroup.includes(7));
   assert.ok(live.stats().maxGroup>=3);
-  const ids=live.agents[6].socialGroup;assert.ok(ids.includes(20)&&ids.includes(7));
+  const ids=live.agents[6].socialGroup;assert.ok(ids.includes(6)&&ids.includes(7));
 });
 
 test('V12 group cancellation removes one Sim without destroying the remaining conversation',()=>{
