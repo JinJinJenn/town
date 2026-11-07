@@ -1,5 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {mkdir,writeFile} from 'node:fs/promises';
+// Interaction coverage uses the supported standard renderer; 00-art tests both visual paths.
+test.beforeEach(async({page})=>{await page.addInitScript(()=>localStorage.setItem('town.softRendering.v1','0'));});
 async function ready(page){
   await page.goto('/town/?seed=petalwood&test=1');
   await page.waitForFunction(()=>!!window.townDebug,{},{timeout:60000});

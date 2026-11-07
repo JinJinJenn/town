@@ -1,8 +1,7 @@
 name: Validate and package Town
-
 on:
   push:
-    branches: [main, feat/checkpoint-02-interior, feat/checkpoint-03-concept-art]
+    branches: [main, feat/checkpoint-02-interior, feat/checkpoint-03-concept-art, feat/checkpoint-04-pink-polish]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -14,63 +13,61 @@ on:
       - '.github/workflows/checkpoint.yml'
       - 'CHECKPOINT.txt'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: town-checkpoint-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [art, interaction, interface]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install pinned dependencies
-        run: npm ci --ignore-scripts
-      - name: Prepare the offline renderer
-        run: npm run vendor
-      - name: Check JavaScript and deterministic generation
+          cache: npm
+      - name: Install locked dependencies and prepare the renderer
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+      - name: Check source and unit tests
         run: |
           for file in src/*.js tools/*.mjs; do node --check "$file"; done
           npm test
-      - name: Install the browser
+      - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Verify the concept-art renderer
+      - name: Test visual rendering
+        if: matrix.suite == 'art'
         run: npx playwright test tests/browser/00-art.spec.js
-      - name: Save the visual review before longer interaction tests
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: town-art-preview
-          path: artifacts/
-          if-no-files-found: ignore
-          retention-days: 30
-      - name: Verify rendering, controls, and mobile layout
+      - name: Test existing game interactions
+        if: matrix.suite == 'interaction'
         run: npx playwright test tests/browser/home.spec.js tests/browser/town.spec.js
-      - name: Package source and test evidence even when a check fails
+      - name: Test v4 interface and photos
+        if: matrix.suite == 'interface'
+        run: npx playwright test tests/browser/04-polish.spec.js
+      - name: Package source and evidence even on failure
         if: always()
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p town-checkpoint
           git archive HEAD | tar -x -C town-checkpoint
-          if [ -d vendor ]; then cp -r vendor town-checkpoint/; fi
-          if [ -d artifacts ]; then cp -r artifacts town-checkpoint/; fi
-          if [ -d test-results ]; then cp -r test-results town-checkpoint/; fi
-          if [ -f package-lock.json ]; then cp package-lock.json town-checkpoint/; fi
+          for dir in vendor artifacts test-results; do
+            if [ -d "$dir" ]; then cp -r "$dir" town-checkpoint/; fi
+          done
           printf '%s\n' "$GITHUB_SHA" > town-checkpoint/COMMIT.txt
           cd town-checkpoint
           find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: town-checkpoint
+          name: town-checkpoint-${{ matrix.suite }}
           path: town-checkpoint/
           include-hidden-files: true
           retention-days: 30

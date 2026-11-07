@@ -5,14 +5,14 @@ const frames=async(page,n=2)=>{
   await page.waitForFunction(({f,n})=>townDebug.getStats().frames>=f+n,{f,n},{timeout:45000});
 };
 test('the concept-art renderer works in both quality modes without changing the town',async({page})=>{
-  test.setTimeout(240000);await mkdir('artifacts',{recursive:true});
+  test.setTimeout(300000);await page.setViewportSize({width:1280,height:800});await mkdir('artifacts',{recursive:true});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto('/town/?seed=petalwood&test=1');
   await page.waitForFunction(()=>window.townDebug?.getStats().frames>2,null,{timeout:90000});
   await page.locator('#explore').click();await page.locator('#pause').click();await frames(page);
   const initial=await page.evaluate(()=>townDebug.getStats());
-  expect(initial.artVersion).toBe('03-pastel-gardens');expect(initial.softRendering).toBe(true);
+  expect(initial.artVersion).toBe('04-rose-cottage');expect(initial.softRendering).toBe(true);
   expect(initial.compositeCalls).toBe(1);expect(initial.triangles).toBeGreaterThan(10000);
   await page.screenshot({path:'artifacts/Town03-neighborhood.png'});
   const clean=await page.addStyleTag({content:'#world > :not(canvas){visibility:hidden!important}'});

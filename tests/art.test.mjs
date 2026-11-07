@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createPlan } from '../src/plan.js';
 import { enhanceKit, plantingPlan, raisedBedPlan } from '../src/art.js';
 import { createKit } from '../src/kit.js';
+import { polishKit } from '../src/polish-kit.js';
 import { createWorld } from '../src/world.js';
 import { createArtWorld } from '../src/art-world.js';
 
@@ -29,7 +30,7 @@ test('the art layer preserves world plans and stays within finite geometry budge
     createRadialGradient:()=>({addColorStop(){}}),fillRect(){},strokeRect(){},fillText(){},
   })})};
   try{
-    const kit=enhanceKit(createKit()), expected=createPlan('petalwood');
+    const kit=polishKit(enhanceKit(createKit())), expected=createPlan('petalwood');
     const world=createArtWorld(kit,createWorld,'petalwood');
     assert.deepEqual(world.plan,expected);assert.equal(world.residents.length,32);
     assert.ok(world.stats.artBatches>0 && world.stats.artBatches<16);

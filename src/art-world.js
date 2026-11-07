@@ -1,3 +1,4 @@
+import {createGardenAir} from './garden-air.js';
 // Keep the interaction/navigation implementation untouched by art-only updates.
 export function createArtWorld(kit, buildWorld, seed) {
   const world=buildWorld(kit,seed), root=kit.group();
@@ -6,10 +7,11 @@ export function createArtWorld(kit, buildWorld, seed) {
     kit.dressLot(garden,lot);
   }
   const detail=kit.compile(root);world.group.add(detail.group);
+  const air=createGardenAir(kit,world.plan);world.group.add(air.group);world.air=air;
   world.stats.staticBatches+=detail.batches.length;
   world.stats.artBatches=detail.batches.length;
   const step=world.step,dispose=world.dispose;let elapsed=0;
-  world.step=dt=>{elapsed+=dt;kit.artTime.value=elapsed;step(dt);};
-  world.dispose=()=>{detail.dispose();dispose();};
+  world.step=dt=>{elapsed+=dt;kit.artTime.value=elapsed;air.step(dt);step(dt);};
+  world.dispose=()=>{air.dispose();detail.dispose();dispose();};
   return world;
 }

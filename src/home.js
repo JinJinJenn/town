@@ -1,10 +1,11 @@
 import * as THREE from '../vendor/three.module.js';
+import {dressHome} from './home-decor.js';
 import {FLOOR_Y, HOME_SEAT, ROOMS} from './home-plan.js';
 
 // Separate immutable batches let us hide the roof and camera-facing walls
 // without rebuilding the neighborhood or introducing transparent sorting.
 export function createHome(kit, lot) {
-  const {box,part,ball,cyl,group,beam}=kit, p=lot.palette, w=lot.width, d=lot.depth;
+  const {box,part,ball,cyl,group,beam}=kit, p={...lot.palette,wall:'#edddd2',trim:'#fff0df',shutter:'#9fb5a7'}, w=lot.width, d=lot.depth;
   const origin=new THREE.Vector3(lot.x,.376,lot.z-1);
   const source=group(null,...origin.toArray());
   const base=group(source), inside=group(source), roof=group(source);
@@ -131,6 +132,7 @@ export function createHome(kit, lot) {
   rounded(bath,'#a7bba9',[2.1,floor+.43,3.9],[1.3,.84,.76]);rounded(bath,'#f2eddf',[2.1,floor+.9,3.9],[1.4,.12,.86]);rounded(bath,'#b2ccc1',[2.1,floor+.97,3.9],[.66,.03,.47]);
   rounded(bath,'#e9e6d9',[2.05,floor+.27,1.75],[.55,.5,.76]);part(bath,'ring','#f6f1e5',[2.05,floor+.55,1.85],[.56,.68,.56],[-Math.PI/2,0,0]);rounded(bath,'#f0eadd',[2.05,floor+.7,1.39],[.59,.6,.23]);
   box(bath,'#9fbdad',[3.1,floor+.04,3.2],[.85,.04,1.4]);plant(bath,3.1,floor+.97,3.9,.6);
+  dressHome(kit,{inside,walls:wallRoots,floor,width:w,depth:d});
   source.updateMatrixWorld(true);
   const batches={};
   for(const [key,root] of Object.entries({base,inside,roof,...wallRoots,door:doorRoot})){
