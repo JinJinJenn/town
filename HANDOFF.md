@@ -1,49 +1,49 @@
-# Town V6: illustrated gardens and a living 3D neighborhood
+# Town V7: cottage-first arrival and layered detail
 
 ## Resume here
 
-Source belongs to `JinJinJenn/town`. The public game is https://jinjinjenn.github.io/town/ and the runtime art gallery is https://jinjinjenn.github.io/town/assets/v6/. Do not change Jenn's separate profile, mods, Cafe or Farm repositories.
+The game and source belong to `JinJinJenn/town`. The public address is https://jinjinjenn.github.io/town/. Keep Jenn's separate profile, mods, Cafe and Farm projects unchanged. This is a real Three.js runtime, not the generated concept mockup.
 
-V6 starts from V5 commit `4f354acd19918c68f3fc57726ea06078dc0d479b`. The mixed-media work is on `feat/checkpoint-06-mixed-media`. Integrated source is `46e4523364d5d9a503772515a3646182e946587b`; the release may add documentation afterward without changing the tested runtime. Preserve older checkpoints and downloaded thread/source kits.
+V7 starts from V6 release `01441198963c9ddc9ebdc7ba9fe92a021b7ae56b`. Work is preserved on `feat/checkpoint-07-lived-in-cottage`. The refined runtime is `e98d3743573b30ba9312ac54994589e0615e4daf`; the release adds documentation without changing that runtime. Read `RELEASE_V7.md` for the scope. Preserve older checkpoint branches and source ZIPs.
 
-## Implemented scope
+## Startup and interaction
 
-The neighborhood still has 16 lots, 32 articulated residents, a cafe, two parks, and one furnished cutaway cottage. Buildings, couches, other furniture and people remain real 3D. Luca's sofa route, camera controls, Tour, Pause, evening lighting, deterministic regeneration, four saved furniture palettes, resident search/following and photo-view exit remain implemented. Photo view is not an image-file export feature.
+The normal URL opens on the central furnished Clover Cottage in isometric cutaway, with its roof removed, the introduction dismissed and the property panel available. This is a camera presentation change, not first-person movement or a new controllable character. Reloads and new seeded neighborhoods return to the furnished home. The overview control and R show the neighborhood; Tour still explores; Visit Clover Cottage returns home. The explicit `?view=town` URL starts at the overview for previews.
 
-V6 adds 64 illustrated hedge cards, 32 planter cards and three decorative blank garden noticeboards, rendered in three instanced batches. Cards face the camera while their bottom centers stay anchored to garden positions. Alpha testing writes depth only for visible artwork; 3D buildings can occlude them. They are decorative and are not added to resident navigation or furniture interactions.
+The town remains a finite 16-lot neighborhood with 32 articulated residents, a cafe, two parks and one furnished cottage. Luca's sofa round trip, four saved furniture palettes, resident search/following, pause, evening lighting, cutaway rotation and photo-view exit remain. Photo view hides UI; it does not export a screenshot file.
 
-Five generated art derivatives are used: hedge, planter, sign, UI corner and petal. The existing 96 animated petals now sample the cropped painted petal texture. Pause and reduced-motion behavior are retained. Floral corner art decorates live UI panels without intercepting clicks. Help has an illustrated-garden toggle saved in localStorage as `town.illustrated.v6`; drifting petals retain their separate toggle.
+## V7 art implementation
 
-Artwork loads asynchronously from the same origin. Failed decorative textures must not prevent the core 3D game from booting. Shared textures survive world regeneration; per-world card geometries/materials/instances and replacement petal geometry are disposed when the world is replaced.
+`src/v7-detail.js` adds 204 interior detail instances, plus wall-owned panelling, cornices, pleated curtains, botanical frames, kitchen tile and utensils, and bathroom mirror/towels. Textiles use small shared meshes for rug weave/fringe and quilt stitching. Counter dishes, fruit, books, flowers, storage baskets, slippers and bath accessories add readable clutter. Decorations do not introduce new navigation obstacles; the couch remains fully 3D and usable.
 
-## Asset provenance and limits
+There are 436 deterministic garden border patches with leaves, flowers and lavender spires, plus richer cottage stone edging and front-fence blooms. Two emissive garden lanterns avoid adding expensive dynamic point lights. Two herb beds are positioned away from the existing raised planter. Placement refinements also put bathroom wall decorations on the correct wall section and avoid duplicate gate lamps.
 
-The assets are compact WebP derivatives of generated PNG artwork from this thread. They are 96px-class runtime textures for small rendered props, with a 68x46 petal, NOT full-resolution originals. Original PNGs and the complete thread art kit remain in the user's downloaded archives. `assets/v6/manifest.json` identifies sources and SHA-256 hashes. Do not claim all source artwork has been published.
+48 garden motes and eight cup-steam instances use two shader batches. Motion uses the existing simulation clock; Pause freezes it. The existing ambient/petal checkbox and reduced-motion setting control the effects. Steam is visible only with the cottage open. `createV7Atmosphere` wraps `world.step` and `world.dispose`, retaining their `this` binding and disposing its owned resources once. It exposes `sync` for cutaway changes while paused.
 
-The complete cottage, gate and bench illustrations remain concept/source artwork rather than replacements for playable 3D objects. This release does not implement furniture placement, additional furnished homes, sleeping, needs, relationships, vehicles or infinite streaming. Do not add fake controls implying those features exist.
+V6's generated illustrated cards remain: 64 hedge cards, 32 planter cards, three blank noticeboards, floral UI ornament and textured petals. Shared textures survive regeneration; missing decorative textures do not prevent 3D startup. Runtime images remain small WebP derivatives, not the full-resolution PNG originals from the downloaded art kit. V7 adds procedural geometry/effects; it does not generate a new image batch.
 
 ## Code map
 
-- `src/v6-media.js`: deterministic card placement, shared texture loading, instanced billboard shader, illustrated-petal integration and cleanup.
-- `src/v6.css`: floral UI ornament, pink header styling and gallery-link presentation.
-- `assets/v6/`: five WebP images, their manifest, and the runtime-art gallery.
-- `src/main.js`: media lifecycle, toggle, evening tint, regeneration and debug stats.
-- `src/v5-look.js`, `src/home-polish.js`: Rose Mint materials, shared flowers, cottage detail and four palettes.
-- `src/v4-world.js`: existing instanced petal animation and reduced-motion behavior.
-- `src/v4-ui.js`: residents, photo view, and saved palette controls.
-- `tests/v6.test.mjs`: deterministic layout and binary artwork checks.
-- `tests/browser/v6.spec.js`: production rendering, sofa/palette/follow/photo regression, phone layout, media toggle, rotation, resource reuse, gallery and load-failure fallback.
+- `src/v7-detail.js`: house dressing, deterministic border planning, kit extension and ambient effects.
+- `src/main.js`: cottage-first arrival, overview controls, effect lifecycle and debug state.
+- `src/home.js`: additive detail integration before palette batching, cutaways and home metadata.
+- `src/v6-media.js`, `assets/v6/`: existing generated cards, textures, loader and gallery.
+- `src/home-polish.js`, `src/v5-look.js`: Rose Mint colors and selectable cottage palettes.
+- `tests/v7.test.mjs`: garden determinism/clearance, palette/cutaway compatibility and effect disposal.
+- `tests/browser/v7.spec.js`: five focused browser tests and screenshots.
 
-`tools/integrate-v6.mjs` is an idempotent development migration, not a browser dependency. Native application source is already committed. The review workflow can make a bot integration commit before testing; its trigger SHA differs from the tested source recorded in `COMMIT.txt`.
+`tools/integrate-v7.mjs` and `tools/refine-v7.mjs` are guarded, idempotent development migrations retained for recovery. The real source files are already integrated and committed; the browser does not run these scripts. Review workflows can save a bot integration commit before testing, so the workflow trigger SHA differs from the actual source in its artifact's `COMMIT.txt`.
 
-## Run, review and publish
+## Validation and release evidence
 
-Packaged checkpoint: `node tools/serve.mjs`, then http://127.0.0.1:4173/town/. The package includes the pinned renderer. Fresh checkout: `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`. Do not open index.html using file://.
+The first integrated runtime passed 29 unit tests and five focused browser tests in run 42346182920. The refined runtime is reviewed in run 42346505302. Inspect that run's final result and screenshots rather than assuming success from the existence of this document. These tests cover real composited rendering, cottage-first startup, sofa round trips, pause, palette persistence, resident following, photo-view exit, 390/320-pixel phone controls, rotated views, regeneration/resource reuse, reduced motion and missing-art fallback.
 
-`npm test` runs 26 unit tests. Install Chromium with `npx playwright install --with-deps chromium`, then run `npx playwright test tests/browser/v6.spec.js` for six focused V6 browser tests. Inspect their actual run results and screenshots; a source commit is not evidence of a passing test. Software-rendered Chromium does not certify hardware frame rates or every legacy regression suite.
+Artifacts retain source, pinned renderer, `artifacts-v7/` screenshots, `COMMIT.txt` and `SHA256SUMS.txt`. Software-rendered Chromium does not establish hardware FPS. Older broad regression suites are separate; a focused V7 pass is not a claim that every legacy test has passed.
 
-Review run: https://github.com/JinJinJenn/town/actions/runs/42343874501. Artifacts include actual tested source, bundled renderer, screenshots, `COMMIT.txt`, and checksums even if a test fails.
+The established Pages workflow stages `src/`, `assets/`, `vendor/`, index.html and style.css from main, publishes to gh-pages, requests a native Pages build, verifies every public file hash, and runs a real public-site WebGL smoke check. Do not require the user to enable Pages again. Check `/town/__deployment.json` and the final deploy result before claiming the release is live.
 
-The established Pages workflow stages `src/`, `assets/`, `vendor/`, index.html and style.css, pushes the generated site to gh-pages, explicitly requests a Pages build, verifies public commit/file hashes, and runs a live WebGL smoke test. Read `HOSTING.md`; do not require the user to enable Pages again. The public `/town/__deployment.json` is the source of truth for the deployed source SHA. Confirm it and the final Pages result before calling a release live.
+## Run and boundaries
 
-Keep working in bounded, committed batches. Do not overwrite old checkpoint branches, force-push another project, or label concept art as live gameplay.
+Packaged source includes the renderer: run `node tools/serve.mjs`, then open http://127.0.0.1:4173/town/. A fresh checkout needs `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`. Do not open index.html through file://.
+
+Furniture placement, sleeping, needs, relationships, additional furnished homes and infinite streaming are not implemented. Keep copy natural and do not add mock controls for unimplemented features. Continue in bounded committed batches; keep Blender optional. Do not overwrite accepted checkpoints, force-push other projects, or describe concept art as live gameplay.
