@@ -16,6 +16,7 @@ try{
   const seat=await page.evaluate(()=>window.townDebug.seatScreen('home-lounger'));assert.ok(seat);
   await page.mouse.click(seat.x,seat.y);
   await page.waitForFunction(()=>window.townDebug.hud().context?.kind==='seat',null,{timeout:15000});
+  await page.waitForFunction(()=>window.townDebug.hud().controls.some(c=>c.id==='seat'),null,{timeout:15000});
   const sit=await page.evaluate(()=>window.townDebug.hud().controls.find(c=>c.id==='seat'));assert.ok(sit);
   await page.mouse.click(sit.x+sit.w/2,sit.y+sit.h/2);
   await page.evaluate(()=>window.townDebug.advanceSimulation(45));
