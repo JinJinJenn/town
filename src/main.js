@@ -1,3 +1,5 @@
+import {enhanceV4Kit, createPetals} from './v4-world.js';
+import {mountV4UI} from './v4-ui.js';
 import { enhanceKit } from './art.js';
 import { createArtWorld } from './art-world.js';
 import { createArtLighting, createDioramaRenderer } from './render-style.js';
@@ -15,10 +17,11 @@ export function start() {
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e6eadb');scene.fog=new THREE.Fog('#e6eadb',145,245);
   const camera=new THREE.OrthographicCamera(-40,40,25,-25,.1,350);
-  const target=new THREE.Vector3(0,0,-2), kit=enhanceKit(createKit());
+  const target=new THREE.Vector3(0,0,-2), kit=enhanceV4Kit(enhanceKit(createKit()));
   const lighting=createArtLighting(scene,renderer,kit), compositor=createDioramaRenderer(renderer);
   let seed=cleanSeed(new URL(location.href).searchParams.get('seed'));
-  let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);
+  let world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,!matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let ui=null;
   let viewHeight=innerWidth<700?55:44, yaw=.76, elevation=.69, paused=false, touring=false, following=null, selected=null, evening=false;
   let previousView=null;
   let last=performance.now(), clock=0, tourClock=0, raf=0, toastTimer=0, frames=0;
@@ -52,6 +55,7 @@ export function start() {
   function homeMeta(){return world.targets.find(t=>t.userData.selection.type==='building'&&t.userData.selection.lot?.furnished).userData.selection;}
   function syncHomeUI(){
     const isHome=selected?.lot?.furnished===true;
+    ui?.syncSelection(isHome);
     $('open-home').hidden=!isHome;$('open-home').textContent=world.home.isOpen?'Put the roof back':'Look inside';
     $('open-home').setAttribute('aria-pressed',String(world.home.isOpen));
     $('home-controls').hidden=!isHome||!world.home.isOpen;
@@ -69,6 +73,7 @@ export function start() {
       yaw=.7;elevation=.94;viewHeight=innerWidth<700?35:19;
       target.copy(world.home.origin);target.y=.8;
       if(innerWidth<700){target.x+=Math.sin(yaw)*4.8;target.z+=Math.cos(yaw)*4.8;}
+      else{const offset=2.2;target.x+=Math.cos(yaw)*offset;target.z-=Math.sin(yaw)*offset;}
     }else if(focus&&previousView){target.copy(previousView.target);viewHeight=previousView.viewHeight;yaw=previousView.yaw;elevation=previousView.elevation;}
     if(!value)previousView=null;
     refreshProjection();syncHomeUI();
@@ -97,7 +102,7 @@ export function start() {
     lighting.apply(value);
   }
   function loadWorld(value){
-    seed=cleanSeed(value);choose(null);scene.remove(world.group);world.dispose();world=createArtWorld(kit,createWorld,seed);scene.add(world.group);
+    seed=cleanSeed(value);choose(null);scene.remove(world.group);world.dispose();world=createArtWorld(kit,createWorld,seed);scene.add(world.group);createPetals(kit,world,ui?.petals??true);ui?.resetWorld();
     $('resident-count').textContent=String(world.residents.length);$('seed').value=seed;
     try{const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState(null,'',url);}catch{}
     resetCamera();toast(`The neighborhood is ready. Its seed is ${seed}.`);
@@ -123,7 +128,12 @@ export function start() {
   $('new-town').onclick=()=>{const values=new Uint32Array(1);crypto.getRandomValues(values);loadWorld(values[0].toString(36));};
   $('close-inspector').onclick=()=>choose(null);
   $('follow').onclick=()=>{if(selected?.type!=='resident')return;setTour(false);following=following===selected.index?null:selected.index;$('follow').textContent=following===null?'Follow this resident':'Stop following';};
-  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  ui=mountV4UI({
+    residents:()=>world.residents,home:()=>world.home,clearKeys:()=>keys.clear(),
+    setPetals:value=>world.setPetals(value),
+    followResident:index=>{setHomeOpen(false);choose(world.residents[index].meta);following=index;$('follow').textContent='Stop following';target.copy(world.residents[index].root.position);target.y=0;},
+  });
+  canvas.addEventListener('contextmenu' ,e=>e.preventDefault());
   canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(clamp(e.deltaY,-160,160)*.0015));},{passive:false});
   canvas.addEventListener('pointerdown',e=>{
     manual();canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -147,7 +157,7 @@ export function start() {
   }
   canvas.addEventListener('pointerup',pointerEnd);canvas.addEventListener('pointercancel',()=>{pointers.clear();pointerStart=null;pointerMoved=true;canvas.classList.remove('dragging');});
   window.addEventListener('keydown',e=>{
-    if(e.target.closest('input,button,a,dialog')||$('help-dialog').open)return;
+    if(e.target.closest('input,button,a,dialog')||document.querySelector('dialog[open]'))return;
     const key=e.key.toLowerCase();if(['w','a','s','d','q','e','r','arrowup','arrowdown','arrowleft','arrowright'].includes(key)){e.preventDefault();manual();keys.add(key);if(key==='r')resetCamera();}
   });
   window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
@@ -170,7 +180,7 @@ export function start() {
   compositor.render(scene,camera);$('loading').hidden=true;raf=requestAnimationFrame(frame);
   // Small inspection API for regression tests and future performance work.
   window.townDebug={
-    getStats:()=>({...world.stats,artVersion:kit.artVersion,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
+    getStats:()=>({...world.stats,artVersion:kit.artVersion,version:4,palette:world.home.palette,photoMode:ui?.photo,softRendering:compositor.enabled,seed,frames,drawCalls:compositor.stats.drawCalls,triangles:compositor.stats.triangles,compositeCalls:compositor.enabled?1:0,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,paused,touring,following,evening,viewHeight,target:target.toArray()}),
     getPlan:()=>JSON.parse(JSON.stringify(world.plan)),
     getHome:()=>({...world.homeActivity.info(),open:world.home.isOpen,walls:world.home.visibleWalls(),origin:world.home.origin.toArray(),residentPosition:world.homeActivity.resident.root.position.toArray()}),
     selectHome:()=>choose(homeMeta()),

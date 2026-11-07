@@ -70,7 +70,7 @@ export function createPetals(kit,world,enabled=true){
   }
   mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.visible=enabled;mesh.name='v4-petals';world.group.add(mesh);
   const dispose=world.dispose;
-  world.dispose=()=>{mesh.dispose();geometry.dispose();material.dispose();dispose();};
+  world.dispose=()=>{mesh.dispose();geometry.dispose();material.dispose();dispose.call(world);};
   world.setPetals=value=>mesh.visible=!!value;
   world.stats.petalInstances=count;
   return mesh;
