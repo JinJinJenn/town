@@ -1,11 +1,14 @@
 // V4 dressing uses real instanced geometry and stays attached to its owning wall.
 // Nothing is placed in the reserved approach from the front door to the sofa.
 export const COTTAGE_PALETTES = Object.freeze({
-  blossom: {label:'Rose & cream', sofa:'#d98eab', cushion:'#f2cad4', quilt:'#c1a5d1', rug:'#eed8cf'},
-  lavender: {label:'Lilac & linen', sofa:'#b19ac9', cushion:'#e6d4ef', quilt:'#aaaed5', rug:'#dfd8e9'},
-  sage: {label:'Sage & honey', sofa:'#93ae9b', cushion:'#e2e7ca', quilt:'#c3b391', rug:'#e4ddc6'},
+  roseMint: {label:'Rose Mint Pop', sofa:'#ed639a', cushion:'#ffdfeb', quilt:'#ef7eae', rug:'#fae2cf', cabinet:'#68ad87', cabinetFront:'#86c6a0', accent:'#81b85c'},
+  blossom: {label:'Rose & cream', sofa:'#d98eab', cushion:'#f2cad4', quilt:'#c1a5d1', rug:'#eed8cf', cabinet:'#98b6a5', cabinetFront:'#aec6b5', accent:'#d8bcae'},
+  lavender: {label:'Lilac & linen', sofa:'#b19ac9', cushion:'#e6d4ef', quilt:'#aaaed5', rug:'#dfd8e9', cabinet:'#93a5b4', cabinetFront:'#b8c7d5', accent:'#bc9bd6'},
+  sage: {label:'Sage & honey', sofa:'#93ae9b', cushion:'#e2e7ca', quilt:'#c3b391', rug:'#e4ddc6', cabinet:'#83a88a', cabinetFront:'#b1c8a0', accent:'#c7b075'},
 });
 export function paletteRole(hex) {
+  if(hex==='98b6a5')return 'cabinet';
+  if(hex==='aec6b5')return 'cabinetFront';
   if(['b8818b','c9919a','c58a93'].includes(hex))return 'sofa';
   if(['dea7aa','e6d8b8','a8bca2'].includes(hex))return 'cushion';
   if(['ada3bc','c6b8d0'].includes(hex))return 'quilt';
