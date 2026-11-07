@@ -1,21 +1,25 @@
-# JinJinJenn Town V11
+# JinJinJenn Town V12
 
-A small pink-and-mint neighborhood with a furnished cutaway cottage, 32 residents and a GPU-rendered live-mode interface.
+A pink-and-mint procedural neighborhood with a furnished cutaway cottage, 32 residents, GPU-rendered live-mode controls, player command queues and Sims-style household interactions.
 
 Play at https://jinjinjenn.github.io/town/.
 
-V11 makes the household directly controllable. Select a portrait, click clear floor or an accessible sidewalk, and choose **Go here**. Commands appear in a six-action queue; click an action to cancel it. The first player order interrupts autonomous behavior, and later orders run in order. The dining table and television have contextual actions, and clicking another resident offers Chat or Select resident.
+V12 expands V11's direct control instead of adding another decorative pass. Select a resident, click clear terrain for **Go here**, click supported seating for **Sit**, click the table for **Have a drink**, the television for **Watch TV**, or another resident for **Chat**. Commands share the existing six-action GPU queue and can be cancelled individually.
 
-P or 0 pauses, 1/2/3 sets speed, and Space or N selects the next resident. X/Delete cancels the selected resident's actions. Drag to pan, right-drag to rotate, and scroll or pinch to zoom. H returns home and R shows the neighborhood. There is no build mode.
+Socials are no longer pair-only. Conversation circles can hold several residents, new Sims can join an existing social, directed Chat keeps the requested Sim as the selected resident's preferred partner, and members can leave without collapsing the whole group.
 
-The scene and visible game interface use WebGL. Contexts, portraits, text and queue controls share one atlas and one HUD batch. The HTML page only hosts the canvas and a fatal-error fallback.
+The first functional outdoor seating pass covers Clover Cottage's bistro chairs, lounger and garden bench plus park picnic benches, chess chairs and park benches. It does not yet make every decorative chair on every procedural residential lot interactive.
 
-## Run locally
+P or 0 pauses, 1/2/3 changes speed, Space or N selects the next resident, and X/Delete cancels the selected resident's commands. Drag/WASD/arrows pan, right-drag or Q/E rotates, wheel/pinch zooms, H focuses home, R shows the neighborhood and F follows the selected resident. There is no build mode.
 
-The downloadable checkpoint includes the renderer: run `node tools/serve.mjs`, then open `http://127.0.0.1:4173/town/`. A fresh checkout needs `npm ci --ignore-scripts` and `npm run vendor` first. Do not open index.html directly with file://.
+The visible game interface remains WebGL/GPU-rendered. Text, portraits, context actions and queue controls share the existing atlas and HUD batch; HTML is only the canvas host and fatal-error fallback.
 
-Run `npm test` for the unit suite. Install Playwright Chromium and run `node tools/review-v11.mjs` for real browser input and layout checks. Accepted screenshots and review counters are in `docs/v11-captures/`.
+## Run and verify locally
 
-Read `HANDOFF.md` and `V11_CHECKPOINT.md` before continuing. Keep changes bounded and checkpoint them before expensive tests. Main deploys automatically through the established Pages workflow; deployment must be verified separately from a successful source commit.
+A packaged checkpoint includes the pinned renderer. Run `node tools/serve.mjs`, then open `http://127.0.0.1:4173/town/`. A fresh checkout needs `npm ci --ignore-scripts` and `npm run vendor` first. Do not use `file://`.
 
-This is a simplified live-mode prototype, not a full life simulator. Only Clover Cottage is furnished and walkable inside. Needs, jobs, relationships and build/buy systems are not implemented. Most neighborhood props remain decorative. Town is not affiliated with EA or Maxis.
+Run `npm test` for the unit suite. Install Playwright Chromium and run `node tools/review-v12.mjs` for the focused browser review. Accepted screenshots and counters are in `docs/v12-captures/`.
+
+Read `HANDOFF.md` and `V12_CHECKPOINT.md` before continuing. Main deploys through the established Pages workflow and the public build is verified separately.
+
+Town remains a simplified live-mode prototype, not a complete Sims 4 clone. Only Clover Cottage is fully furnished and walkable inside; needs, careers, relationship progression, build/buy and broad object-interaction coverage are still future work. Town is not affiliated with EA or Maxis.
