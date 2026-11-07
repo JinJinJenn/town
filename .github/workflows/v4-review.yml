@@ -1,0 +1,64 @@
+name: Review Town V4
+on:
+  push:
+    branches: [feat/checkpoint-04-pink-polish]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v4-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/checkpoint-04-pink-polish
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply the checked V4 source integration
+        run: |
+          node tools/integrate-v4.mjs
+          node --input-type=module <<'NODE'
+          import {readFile,writeFile} from 'node:fs/promises';
+          const p='src/v4-world.js';
+          await writeFile(p,(await readFile(p,'utf8')).replace('material.dispose();dispose();','material.dispose();dispose.call(world);'));
+          NODE
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.js src/home.js src/v4-world.js package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v4): integrate the pink interface and polished cottage into the running game'
+            git push origin HEAD:feat/checkpoint-04-pink-polish
+          fi
+      - name: Install and validate the source
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify V4 rendering, interactions and phone layouts
+        run: npx playwright test tests/browser/v4.spec.js
+      - name: Package the committed source and browser evidence
+        if: always()
+        run: |
+          mkdir -p town-v4-checkpoint
+          git archive HEAD | tar -x -C town-v4-checkpoint
+          cp -R vendor town-v4-checkpoint/ || true
+          cp -R artifacts-v4 town-v4-checkpoint/ || true
+          cp -R test-results town-v4-checkpoint/ || true
+          git rev-parse HEAD > town-v4-checkpoint/COMMIT.txt
+          cd town-v4-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v4-checkpoint
+          path: town-v4-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
