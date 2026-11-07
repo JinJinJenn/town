@@ -1,0 +1,57 @@
+name: Review Town V7 Combined Detail
+on:
+  push:
+    branches: [feat/checkpoint-07-combined-release]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v7-combined-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Save combined V7 source before testing
+        run: |
+          node tools/integrate-v7-lived-in.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main.js src/home.js src/v7-detail.js index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v7): combine layered cottage detail with preserved renderer optimizations'
+            git push origin HEAD:feat/checkpoint-07-combined-release
+          fi
+      - name: Validate both V7 contributions
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+      - name: Test the combined cottage, atlas, effects and phone controls
+        run: npx playwright test tests/browser/v7-lived-in.spec.js
+      - name: Package source and evidence even on failure
+        if: always()
+        run: |
+          mkdir -p town-v7-combined
+          git archive HEAD | tar -x -C town-v7-combined
+          if [ -d vendor ]; then cp -R vendor town-v7-combined/; fi
+          if [ -d artifacts-v7 ]; then cp -R artifacts-v7 town-v7-combined/; fi
+          if [ -d test-results ]; then cp -R test-results town-v7-combined/; fi
+          git rev-parse HEAD > town-v7-combined/COMMIT.txt
+          cd town-v7-combined
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v7-combined
+          path: town-v7-combined/
+          include-hidden-files: true
+          retention-days: 30
