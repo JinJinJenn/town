@@ -1,33 +1,23 @@
-# JinJinJenn Town V7
+# JinJinJenn Town V8
 
-A cozy 3D neighborhood that opens inside Clover Cottage, with saturated rose-and-mint colors, furnished cutaway rooms, animated residents and illustrated garden details.
+A cozy, procedural 3D neighborhood for JinJinJenn, with a furnished cutaway cottage, animated residents, gardens and a pink-and-mint interface.
 
-**Play:** https://jinjinjenn.github.io/town/
+Play: https://jinjinjenn.github.io/town/
 
-**Runtime art gallery:** https://jinjinjenn.github.io/town/assets/v6/
+V8 adds 36 simple-3D prop recipes and 113 placed props to the default neighborhood. These include gardening equipment, patio furniture, laundry lines, birdhouses, park play equipment, a pastry cart and cottage accessories. The new props are decorative; the existing sofa interaction remains functional.
 
-## Explore the town
-
-The game starts on the furnished cottage with its roof removed. Rotate or zoom the camera, invite Luca to sit on the sofa, change the furniture palette, or follow a resident. Use the neighborhood overview control or R to zoom out, and Tour to watch the wider neighborhood. Visit Clover Cottage brings you back inside.
-
-V7 adds layered wall trim, curtains, framed botanicals, kitchen clutter, woven rugs and quilt stitching, denser flowering borders, herb beds and small ambient effects. Garden motes and cup steam respect Pause and reduced-motion settings. Buildings, furniture and residents remain real 3D; the existing illustrated plants and panel ornaments provide a mixed-media finish.
-
-The current neighborhood has 16 lots, 32 residents, a cafe, two parks and one furnished home. It is a bounded prototype, not a complete life simulation. Furniture placement, needs, sleeping, relationships and infinite streaming are not implemented.
+The neighborhood currently contains 16 lots, 32 residents, one furnished home, a cafe and two parks. It opens at Clover Cottage. Camera exploration, Tour, Pause, evening lighting, resident following, seeded regeneration, cutaway walls and four saved furniture palettes are available. The scene mixes actual 3D objects with illustrated garden cards.
 
 ## Run locally
 
-The packaged checkpoint includes the pinned Three.js renderer. Run `node tools/serve.mjs` and open http://127.0.0.1:4173/town/.
-
-For a fresh repository checkout, run `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`. Do not open index.html directly through file://.
-
-The combined V7 release also retains the garden texture atlas, lighter shared geometry, bounded static merging, shadow-update throttling and phone quality defaults from the parallel performance checkpoint. Earlier benchmark captures are retained as historical evidence, not measurements of the denser final scene.
+Fresh checkout: `npm ci --ignore-scripts`, `npm run vendor`, then `npm run dev`.
+A packaged checkpoint already includes the renderer: run `node tools/serve.mjs`.
+Open http://127.0.0.1:4173/town/ rather than opening index.html through file://.
 
 ## Tests and recovery
 
-`npm test` runs the Node unit tests. Install the browser with `npx playwright install --with-deps chromium`, then run `npx playwright test tests/browser/v7-lived-in.spec.js` for the focused V7 browser review. Screenshots and test state are written to `artifacts-v7/`.
+`npm test` runs the unit suite. `.github/workflows/v8-review.yml` prepares the exact V7 baseline and runs matched captures and regression checks. Passing screenshots and metrics are committed under `docs/v8-captures/`. Read `HANDOFF.md` and `V8_CHECKPOINT.md` before continuing. Older checkpoint branches remain preserved.
 
-Read `HANDOFF.md`, `V7_COMBINED_HANDOFF.md` and `HOSTING.md` before continuing work. The review workflow saves integrated source before testing and archives source, renderer and evidence even on failure. Software-rendered browser tests are not hardware performance benchmarks.
+Main publishes automatically using the existing gh-pages workflow, including public-file hash verification and a live-site WebGL smoke test. Read `HOSTING.md` and check the public deployment manifest for the actual published commit.
 
-Runtime changes on main publish automatically through the existing Pages workflow. The public `__deployment.json` identifies the source commit and file hashes; a source commit alone is not proof of a live deployment.
-
-This project is separate from Jenn's profile website, mods, Cafe and Farm. It is not affiliated with Electronic Arts or Maxis.
+This is an independent game experiment, not affiliated with Electronic Arts or Maxis. It is separate from JinJinJenn's profile, mods, Cafe and Farm repositories.
