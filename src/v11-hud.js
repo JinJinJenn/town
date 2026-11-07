@@ -37,7 +37,7 @@ export function createLiveHUD(renderer,canvas,onAction){
   function portrait(r,x,y,w,h){rect(x,y,w,h,r.index===currentSelected?colors.pale:colors.button,10);const c=cells.get('@portrait:'+r.index);if(c)quad(x,y,w,h,colors.white,c);else icon('person',x+5,y+8,w-10);}
   let currentSelected=-1;
 
-  function quad(x,y,w,h,c,region=null,radius=0){if(vertices+4>limit)return;const n=vertices;vertices+=4;const coords=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],q=[[0,0],[1,0],[1,1],[0,1]];for(let i=0;i<4;i++){pos.set(coords[i],(n+i)*2);local.set(q[i],(n+i)*2);sizes.set([w,h],(n+i)*2);col.set(c,(n+i)*4);rad[n+i]=region?(region.rgb?-2:-1):radius;uv.set(region?[(region.x+q[i][0]*region.w)/1024,1-(region.y+q[i][1]*region.h)/512]:[0,0],(n+i)*2);}}
+  function quad(x,y,w,h,c,region=null,radius=0){if(![x,y,w,h].every(Number.isFinite)||vertices+4>limit)return;const n=vertices;vertices+=4;const coords=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],q=[[0,0],[1,0],[1,1],[0,1]];for(let i=0;i<4;i++){pos.set(coords[i],(n+i)*2);local.set(q[i],(n+i)*2);sizes.set([w,h],(n+i)*2);col.set(c,(n+i)*4);rad[n+i]=region?(region.rgb?-2:-1):radius;uv.set(region?[(region.x+q[i][0]*region.w)/1024,1-(region.y+q[i][1]*region.h)/512]:[0,0],(n+i)*2);}}
   const rect=(x,y,w,h,c,r=10)=>quad(x,y,w,h,c,null,r);
   function text(value,x,y,size=14,color=colors.ink){const s=size/26;for(const ch of String(value)){const c=cells.get(ch)||cells.get('?');quad(x-3*s,y-3*s,40*s,40*s,color,c);x+=(c.advance+.6)*s;}return x;}
   const icon=(name,x,y,size=26,color=colors.ink)=>quad(x,y,size,size,color,cells.get('@'+name));
@@ -46,7 +46,7 @@ export function createLiveHUD(renderer,canvas,onAction){
   function renderModel(m){
     vertices=0;hits=[];buildPortraits(m);currentSelected=m.selected.index;const phone=width<760;
     rect(12,12,phone?244:280,34,colors.panel,17);icon('diamond',22,19,20,colors.mint);text('LIVE',49,21,12,colors.mint);text(`${m.inside} at home / 32 neighbors`,89,21,phone?10:12,colors.ink);
-    for(const b of m.bubbles??[]){if(b.x<10||b.x>width-20||b.y<55||b.y>height-170)continue;rect(b.x-12,b.y-12,24,21,colors.panel,8);icon(b.icon||'chat',b.x-9,b.y-10,18,colors.mint);}
+    for(const b of m.bubbles??[]){if(!Number.isFinite(b.x)||!Number.isFinite(b.y)||b.x<10||b.x>width-20||b.y<55||b.y>height-170)continue;rect(b.x-12,b.y-12,24,21,colors.panel,8);icon(b.icon||'chat',b.x-9,b.y-10,18,colors.mint);}
     const bw=phone?width-16:680,bx=phone?8:18,by=height-(phone?150:135);
     hits.push({id:'panel',label:'Live mode',x:bx,y:by,w:bw,h:phone?140:122});
     rect(bx,by+3,bw,phone?140:122,[.4,.18,.28,.16],17);rect(bx,by,bw,phone?137:119,colors.panel,17);
@@ -63,7 +63,7 @@ export function createLiveHUD(renderer,canvas,onAction){
         icon('close',xx+cw-15,qy+24,10,c.active?colors.white:colors.muted);
       }
     }
-    if(m.goal){icon('follow',m.goal.x-15,m.goal.y-15,30,colors.mint);}
+    if(m.goal&&Number.isFinite(m.goal.x)&&Number.isFinite(m.goal.y)){icon('follow',m.goal.x-15,m.goal.y-15,30,colors.mint);}
     if(context&&!menu){
       const ground=context.kind==='ground',person=context.kind==='resident',seat=context.kind==='seat';
       const w=Math.min(210,width-16),h=person?130:90,x=Math.max(8,Math.min(width-w-8,context.x-w/2)),y=Math.max(52,Math.min(by-82-h,context.y-h+14));
