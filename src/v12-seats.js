@@ -34,8 +34,8 @@ export function addV12SeatSlots(nav,plan,origin){
   for(const seat of seats){
     let approach=null;
     if(seat.lot===plan.lots.find(l=>l.furnished).id){
-      const r=nav.resolve({x:seat.x,z:seat.z});
-      if(r)approach=r.node;
+      let best=Infinity;for(const n of nav.nodes){if(n.zone!=='yard')continue;const d=Math.hypot(n.x-seat.x,n.z-seat.z);if(d<best){best=d;approach=n.id;}}
+      if(best>2.2)approach=null;
     }else{
       const ring=nav.rings.get(seat.lot)||[];
       let best=Infinity;
