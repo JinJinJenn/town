@@ -100,10 +100,11 @@ export function createWorld(kit, seed) {
   pick(sofaRoot,'box',[-3,.9,1.1],[2.9,1.2,1.1],{type:'furniture',name:'Clover Cottage sofa',lot:home.lot});
   sofaRoot.updateMatrixWorld(true);
   const staticBatch=kit.compile(root), dynamicBatch=kit.compile(actors,true);
-  group.add(staticBatch.group,dynamicBatch.group);let elapsed=0;
+  group.add(staticBatch.group,dynamicBatch.group);let elapsed=0,liveController=null;
   function step(dt) {
     elapsed+=dt;
-    for(const r of residents) {
+    if(liveController)liveController.step(dt);
+    else for(const r of residents) {
       if(r===homeActivity.resident&&homeActivity.step(dt))continue;
       r.nextPause-=dt;
       if(r.nextPause<=0) {r.wait=1.5+r.random()*2;r.nextPause=12+r.random()*18;}
@@ -130,6 +131,7 @@ export function createWorld(kit, seed) {
   }
   step(0);
   return {group,plan,targets,residents,step,home,homeActivity,
+    setLiveController(controller){liveController=controller;},
     getTargets:()=>targets.filter(t=>t.userData.selection.type==='furniture'?home.isOpen:!(t.userData.selection.lot?.furnished&&home.isOpen)),
     stats:{lots:plan.lots.length,residents:residents.length,staticBatches:staticBatch.batches.length,dynamicBatches:dynamicBatch.batches.length},
     dispose(){staticBatch.dispose();dynamicBatch.dispose();home.dispose();pickMaterial.dispose();group.clear();}
