@@ -1,0 +1,257 @@
+{
+  "note": "Identical 1280x800 viewport, DPR 1, seed petalwood and cottage camera. Counters include shadows, scene and compositor. Software Chromium is not a real-device FPS benchmark.",
+  "baselineCommit": "01441198963c9ddc9ebdc7ba9fe92a021b7ae56b",
+  "cases": [
+    {
+      "version": 6,
+      "width": 1280,
+      "height": 800,
+      "image": "TownV6-cottage.png",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 16,
+        "petalInstances": 96,
+        "artVersion": "05-rose-mint",
+        "version": 6,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 3,
+          "textureCount": 4,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "colorStyle": "Rose Mint Pop",
+        "palette": "roseMint",
+        "photoMode": false,
+        "softRendering": true,
+        "seed": "petalwood",
+        "frames": 24,
+        "drawCalls": 63,
+        "triangles": 1109514,
+        "compositeCalls": 1,
+        "geometries": 18,
+        "textures": 9,
+        "paused": true,
+        "touring": false,
+        "following": null,
+        "evening": false,
+        "viewHeight": 19,
+        "target": [
+          13.682652812025875,
+          0.8,
+          9.58272108807708
+        ]
+      },
+      "paused": {
+        "samples": 6,
+        "meanCalls": 127,
+        "meanTriangles": 2212602,
+        "minCalls": 127,
+        "maxCalls": 127
+      },
+      "moving": {
+        "samples": 6,
+        "meanCalls": 127,
+        "meanTriangles": 2212602,
+        "minCalls": 127,
+        "maxCalls": 127
+      },
+      "errors": []
+    },
+    {
+      "version": 7,
+      "width": 1280,
+      "height": 800,
+      "image": "TownV7-cottage.png",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 31,
+        "dynamicBatches": 6,
+        "artBatches": 15,
+        "petalInstances": 96,
+        "artVersion": "07-cottage-detail",
+        "version": 7,
+        "shadowRefreshHz": 10,
+        "pixelRatio": 1,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "colorStyle": "Rose Mint Pop",
+        "palette": "roseMint",
+        "photoMode": false,
+        "softRendering": true,
+        "seed": "petalwood",
+        "frames": 24,
+        "drawCalls": 49,
+        "triangles": 927246,
+        "compositeCalls": 1,
+        "geometries": 20,
+        "textures": 6,
+        "paused": true,
+        "touring": false,
+        "following": null,
+        "evening": false,
+        "viewHeight": 19,
+        "target": [
+          13.682652812025875,
+          0.8,
+          9.58272108807708
+        ]
+      },
+      "paused": {
+        "samples": 6,
+        "meanCalls": 50,
+        "meanTriangles": 927248,
+        "minCalls": 50,
+        "maxCalls": 50
+      },
+      "moving": {
+        "samples": 6,
+        "meanCalls": 100,
+        "meanTriangles": 1848018,
+        "minCalls": 100,
+        "maxCalls": 100
+      },
+      "errors": []
+    },
+    {
+      "version": 6,
+      "width": 320,
+      "height": 640,
+      "image": "TownV6-phone.png",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 33,
+        "dynamicBatches": 6,
+        "artBatches": 16,
+        "petalInstances": 96,
+        "artVersion": "05-rose-mint",
+        "version": 6,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 3,
+          "textureCount": 4,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "colorStyle": "Rose Mint Pop",
+        "palette": "roseMint",
+        "photoMode": false,
+        "softRendering": true,
+        "seed": "petalwood",
+        "frames": 26,
+        "drawCalls": 63,
+        "triangles": 1109514,
+        "compositeCalls": 1,
+        "geometries": 18,
+        "textures": 9,
+        "paused": true,
+        "touring": false,
+        "following": null,
+        "evening": false,
+        "viewHeight": 35,
+        "target": [
+          15.092244898740917,
+          0.8,
+          14.671242498965544
+        ]
+      },
+      "paused": {
+        "samples": 6,
+        "meanCalls": 127,
+        "meanTriangles": 2212602,
+        "minCalls": 127,
+        "maxCalls": 127
+      },
+      "moving": {
+        "samples": 6,
+        "meanCalls": 127,
+        "meanTriangles": 2212602,
+        "minCalls": 127,
+        "maxCalls": 127
+      },
+      "errors": []
+    },
+    {
+      "version": 7,
+      "width": 320,
+      "height": 640,
+      "image": "TownV7-phone.png",
+      "stats": {
+        "lots": 16,
+        "residents": 32,
+        "staticBatches": 31,
+        "dynamicBatches": 6,
+        "artBatches": 15,
+        "petalInstances": 96,
+        "artVersion": "07-cottage-detail",
+        "version": 7,
+        "shadowRefreshHz": 10,
+        "pixelRatio": 1,
+        "mixedMedia": {
+          "enabled": true,
+          "status": "ready",
+          "cards": 99,
+          "batches": 1,
+          "atlasSize": 256,
+          "textureCount": 2,
+          "texturedPetals": true,
+          "failedAssets": []
+        },
+        "colorStyle": "Rose Mint Pop",
+        "palette": "roseMint",
+        "photoMode": false,
+        "softRendering": false,
+        "seed": "petalwood",
+        "frames": 27,
+        "drawCalls": 49,
+        "triangles": 927246,
+        "compositeCalls": 0,
+        "geometries": 19,
+        "textures": 4,
+        "paused": true,
+        "touring": false,
+        "following": null,
+        "evening": false,
+        "viewHeight": 35,
+        "target": [
+          15.092244898740917,
+          0.8,
+          14.671242498965544
+        ]
+      },
+      "paused": {
+        "samples": 6,
+        "meanCalls": 49,
+        "meanTriangles": 927246,
+        "minCalls": 49,
+        "maxCalls": 49
+      },
+      "moving": {
+        "samples": 6,
+        "meanCalls": 82.33333333333333,
+        "meanTriangles": 1541092.6666666667,
+        "minCalls": 49,
+        "maxCalls": 99
+      },
+      "errors": []
+    }
+  ],
+  "passed": true
+}
