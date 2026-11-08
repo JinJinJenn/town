@@ -80,7 +80,7 @@ export function addV12SeatSlots(nav,plan,origin){
   // Courtyard routes enter through each lot's gate, then remain outside buildings.
   // Rotated lots share the same entrance layout in their own local coordinates.
   const corridors=new Map();
-  for(const lot of plan.lots.filter(l=>!l.furnished)){
+  for(const lot of plan.lots){
     const positions=[[0,8.0],[0,7.05],[-7,7.05],[7,7.05],[-7,2],[7,2],[-7,-2],[7,-2],[-7,-7],[7,-7],[0,-7]];
     const waypoints=positions.map(([x,z])=>{
       const p=rotateLocal(lot,x,z);return addNode(p.x,.33,p.z);
@@ -101,20 +101,14 @@ export function addV12SeatSlots(nav,plan,origin){
       if(lot.kind==='park'){
         if(lot.id===9&&(x/3.5)**2+(z/4.5)**2<1)return false;
         if(lot.id!==9&&Math.hypot(x,z)<2.7)return false;
-      }else if(Math.abs(x)<lot.width/2+.8&&Math.abs(z)<lot.depth/2+.8)return false;
+      }else if(Math.abs(x)<(lot.furnished?6:lot.width/2+.8)&&Math.abs(z-(lot.furnished?-1:0))<(lot.furnished?5.1:lot.depth/2+.8))return false;
     }
     return true;
   }
   for(const seat of seats){
-    let approaches=[];
-    if(seat.lot===home.id){
-      approaches=nodes.filter(n=>n.zone==='yard').map(n=>({id:n.id,d:Math.hypot(n.x-seat.x,n.z-seat.z)})).sort((a,b)=>a.d-b.d);
-      approaches=approaches.filter(a=>a.d<2.2).slice(0,1);
-    }else{
-      const lot=plan.lots[seat.lot];
-      approaches=corridors.get(lot.id).map(id=>({id,d:Math.hypot(nodes[id].x-seat.x,nodes[id].z-seat.z)})).sort((a,b)=>a.d-b.d);
-      approaches=approaches.filter(a=>clearSegment(lot,nodes[a.id],seat)).slice(0,2);
-    }
+    const lot=plan.lots[seat.lot];
+    let approaches=corridors.get(lot.id).map(id=>({id,d:Math.hypot(nodes[id].x-seat.x,nodes[id].z-seat.z)})).sort((a,b)=>a.d-b.d);
+    approaches=approaches.filter(a=>clearSegment(lot,nodes[a.id],seat)).slice(0,2);
     if(!approaches.length)continue;
     const id=addNode(seat.x,.376,seat.z,'seat');
     for(const approach of approaches)link(id,approach.id);
