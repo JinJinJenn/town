@@ -132,7 +132,7 @@ export function createWorld(kit, seed) {
   step(0);
   return {group,plan,targets,residents,step,home,homeActivity,
     setLiveController(controller){liveController=controller;},
-    getTargets:()=>targets.filter(t=>t.userData.selection.type==='furniture'?home.isOpen:!(t.userData.selection.lot?.furnished&&home.isOpen)),
+    getTargets:()=>targets.filter(t=>t.userData.selection.type==='outdoorSeat'?true:t.userData.selection.type==='furniture'?home.isOpen:!(t.userData.selection.lot?.furnished&&home.isOpen)),
     stats:{lots:plan.lots.length,residents:residents.length,staticBatches:staticBatch.batches.length,dynamicBatches:dynamicBatch.batches.length},
     dispose(){staticBatch.dispose();dynamicBatch.dispose();home.dispose();pickMaterial.dispose();group.clear();}
   };
