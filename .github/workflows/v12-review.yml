@@ -1,7 +1,7 @@
 name: Review Town V12
 on:
   push:
-    branches: [feat/checkpoint-12-seats-groups]
+    branches: [feat/checkpoint-12-seats-groups, feat/v12-seat-fixes-20261108]
     paths: ['src/**','tests/**','tools/**','package*.json','index.html','.github/workflows/v12-review.yml']
   workflow_dispatch:
 permissions:
@@ -39,7 +39,7 @@ jobs:
           git add docs/v12-captures
           if ! git diff --cached --quiet; then
             git commit -m 'docs(v12): preserve real seat and group-social captures'
-            git push origin HEAD:feat/checkpoint-12-seats-groups
+            git push origin HEAD:${{ github.ref_name }}
           fi
       - name: Package recoverable checkpoint
         if: always()
