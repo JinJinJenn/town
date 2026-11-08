@@ -11,7 +11,10 @@ try{
   const browser=await chromium.launch({args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const page=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
   let stage='boot';const errors=[],warnings=[];page.on('pageerror',e=>errors.push({stage,text:e.message}));page.on('console',m=>{if(m.type()!=='error')return;const item={stage,text:m.text()};if(item.text.includes('BufferGeometry.computeBoundingSphere(): Computed radius is NaN'))warnings.push(item);else errors.push(item);});
-  await page.goto(base+(live?'':'?test=1'),{waitUntil:'networkidle',timeout:60000});
+  const smokeURL=new URL(base);smokeURL.searchParams.set('test','1');
+  // Accelerate deterministic simulation in BOTH local and public smoke tests.
+  // The public test helper is intentionally gated behind ?test=1.
+  await page.goto(smokeURL.href,{waitUntil:'networkidle',timeout:60000});
   await page.waitForFunction(()=>window.townDebug?.getStats().version===12&&window.townDebug.getStats().frames>3,null,{timeout:90000});
   const bootGeometry=await page.evaluate(()=>window.townDebug.geometryIssues());if(bootGeometry.length)console.error('V12 boot geometry issues',JSON.stringify(bootGeometry));
   stage='seat-context';const seat=await page.evaluate(()=>window.townDebug.seatScreen('home-lounger'));assert.ok(seat);
