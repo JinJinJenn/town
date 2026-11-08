@@ -11,6 +11,7 @@ on:
       - 'package*.json'
       - 'tools/**'
       - '.github/workflows/pages.yml'
+      - '.github/workflows/checkpoint.yml'
   workflow_dispatch:
 
 permissions:
