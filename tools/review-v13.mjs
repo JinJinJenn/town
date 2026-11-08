@@ -1,0 +1,55 @@
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {spawn} from 'node:child_process';
+
+const live=Boolean(process.env.SITE_URL),port=4173,base=process.env.SITE_URL||'http://127.0.0.1:4173/town/';
+const server=live?null:spawn(process.execPath,['tools/serve.mjs'],{stdio:'inherit',env:{...process.env,PORT:String(port)}});
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const out=live?'artifacts':'artifacts-v13';
+try{
+ if(server)await sleep(800);
+ await mkdir(out,{recursive:true});
+ const browser=await chromium.launch({args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ const page=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
+ const errors=[],warnings=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ page.on('console',m=>{if(m.type()!=='error')return;const s=m.text();if(s.includes('BufferGeometry.computeBoundingSphere(): Computed radius is NaN'))warnings.push(s);else errors.push(s);});
+ const url=new URL(base);url.searchParams.set('test','1');url.searchParams.set('seed','petalwood');
+ await page.goto(url.href,{waitUntil:'domcontentloaded',timeout:60000});
+ await page.waitForFunction(()=>window.townDebug?.getStats().version===13&&window.townDebug.getStats().frames>=3,null,{timeout:90000});
+ const check=()=>page.evaluate(()=>window.townDebug.residents()[20]);
+ await page.evaluate(()=>window.townDebug.advanceSimulation(1.5));
+ const before=await check();assert.equal(before.state,'watching TV');assert.ok(before.sitBlend>.95);
+ await page.screenshot({path:out+'/TownV13-sofa-seated.png',timeout:90000});
+ const request=await page.evaluate(()=>{const o=window.townDebug.getHome().origin,p={x:o[0]-1.2,z:o[2]+2.9};window.townDebug.action('go',{point:p});return p;});
+ await page.evaluate(()=>window.townDebug.advanceSimulation(.34));
+ const middle=await check();assert.equal(middle.state,'standing up');assert.ok(middle.getUpRemaining>0);
+ assert.ok(Math.hypot(before.logicalPosition.x-middle.logicalPosition.x,before.logicalPosition.z-middle.logicalPosition.z)<.001,'Sim walked with bent knees');
+ assert.ok(middle.renderY>before.renderY+.03,'Couch did not raise resident during stand-up');
+ await page.screenshot({path:out+'/TownV13-standing-up.png',timeout:90000});
+ await page.evaluate(()=>window.townDebug.advanceSimulation(.58));
+ const after=await check();assert.ok(after.sitBlend<.02);assert.equal(after.getUpRemaining,0);assert.ok(!after.exitSeat);
+ assert.ok([after.logicalPosition.x,after.logicalPosition.y,after.logicalPosition.z,after.renderY].every(Number.isFinite));
+ await page.screenshot({path:out+'/TownV13-standing-clear.png',timeout:90000});
+ await page.evaluate(()=>{window.townDebug.action('cancel-all');window.townDebug.action('seat',{seatId:'home-lounger'});});
+ let outdoor=null;
+ for(let i=0;i<45;i++){await page.evaluate(()=>window.townDebug.advanceSimulation(2));outdoor=await check();if(outdoor.state==='sitting'&&outdoor.sitBlend>.95)break;}
+ assert.equal(outdoor.state,'sitting','Luca failed to reach the garden lounger');
+ await page.screenshot({path:out+'/TownV13-garden-lounger.png',timeout:90000});
+ await page.evaluate(()=>window.townDebug.action('cancel-all'));
+ await page.evaluate(()=>window.townDebug.advanceSimulation(.45));
+ const midOutside=await check();assert.equal(midOutside.state,'standing up');assert.ok(midOutside.getUpRemaining>0);
+ await page.evaluate(()=>window.townDebug.advanceSimulation(.42));
+ const outside=await check();assert.equal(outside.getUpRemaining,0);assert.ok(Math.abs(outside.renderY-outside.logicalPosition.y)<.002);
+ const stats=await page.evaluate(()=>window.townDebug.getStats());
+ assert.ok(stats.live.getUps>=2);assert.equal(stats.hudDrawCalls,1);
+ const finite=await page.evaluate(()=>({agents:window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)||!Number.isFinite(r.sitBlend)),hud:window.townDebug.hud().controls.filter(r=>![r.x,r.y,r.w,r.h].every(Number.isFinite))}));
+ assert.deepEqual(finite,{agents:[],hud:[]});
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);
+ await page.screenshot({path:out+'/TownV13-phone.png',timeout:90000});
+ assert.deepEqual(errors,[],'Browser emitted an unhandled error');
+ await writeFile(out+'/review.json',JSON.stringify({version:13,source:base,checked:new Date().toISOString(),sofa:{before,middle,after,requested:request},lounger:{seated:outdoor,mid:midOutside,standing:outside},renderer:{drawCalls:stats.drawCalls,triangles:stats.triangles,hudCalls:stats.hudDrawCalls},warnings},null,2));
+ console.log('V13 browser QA passed: TV get-up, garden-lounger get-up, GPU controls and phone layout');
+ await browser.close();
+}finally{server?.kill('SIGTERM');}
