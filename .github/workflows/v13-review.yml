@@ -1,0 +1,74 @@
+name: Review Town V13 animation QA
+on:
+  push:
+    branches: [feat/checkpoint-13-animation-qa]
+    paths:
+      - 'tools/apply-v13.py'
+      - 'tools/review-v13.mjs'
+      - 'tests/v13.test.mjs'
+      - '.github/workflows/v13-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: town-v13-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Apply animation fix and COMMIT source before expensive browser work
+        run: |
+          set -euo pipefail
+          python3 tools/apply-v13.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main-v11.js src/v11-life.js src/v11-hud.js index.html package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(v13): stand before walking; preserve seat pivot and pose clearance'
+            git push origin HEAD:feat/checkpoint-13-animation-qa
+          fi
+      - name: Validate all source files and regression suites
+        run: |
+          npm ci --ignore-scripts
+          npm run vendor
+          for file in src/*.js tools/*.mjs; do node --check "$file"; done
+          npm test
+      - name: Install capture browser
+        run: npx playwright install --with-deps chromium
+      - name: Run real 3D sofa and outdoor-chair QA
+        run: node tools/review-v13.mjs
+      - name: Preserve passed screenshots and evidence in Git
+        if: success()
+        run: |
+          set -euo pipefail
+          mkdir -p docs/v13-captures
+          cp artifacts-v13/* docs/v13-captures/
+          git add docs/v13-captures
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(v13): capture seated, standing, outdoor and mobile reviews'
+            git push origin HEAD:feat/checkpoint-13-animation-qa
+          fi
+      - name: Package recoverable V13 source regardless of review outcome
+        if: always()
+        run: |
+          mkdir -p town-v13-checkpoint
+          git archive HEAD | tar -x -C town-v13-checkpoint
+          if [ -d vendor ]; then cp -R vendor town-v13-checkpoint/; fi
+          if [ -d artifacts-v13 ]; then cp -R artifacts-v13 town-v13-checkpoint/; fi
+          git rev-parse HEAD > town-v13-checkpoint/COMMIT.txt
+          cd town-v13-checkpoint
+          find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: town-v13-checkpoint
+          path: town-v13-checkpoint/
+          include-hidden-files: true
+          retention-days: 30
