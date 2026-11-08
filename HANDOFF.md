@@ -1,3 +1,9 @@
+# V13 update: seated-to-standing animation QA
+
+**Latest accepted checkpoint: V13.** The previous V12 content follows for historical context. V13 adds a grounded 0.82-second get-up transition for TV sofa, indoor chairs and outdoor seats, blocks locomotion while standing, prevents seat reoccupation mid-transition and improves cancellation. See [V13_CHECKPOINT.md](V13_CHECKPOINT.md) and `docs/v13-captures/` for real WebGL proof. All 64 tests and the focused V13 browser review passed on feature branch `feat/checkpoint-13-animation-qa`. Release verification: compare the published `__deployment.json` commit to the latest main commit; the workflow must pass before declaring live. No new models/textures/DOM UI or build mode added.
+
+---
+
 # Town V12: functional seating and multi-Sim socials
 
 Only change `JinJinJenn/town`. V11 baseline: `a9290b5e532a6fc8d33ccb23a4b64828a53e3614`. V12 work branch: `feat/checkpoint-12-seats-groups`. Accepted runtime was reviewed from `3818b7f72b8105272685be54d1208f46a7619970`; passing captures were committed at `d42086d45729e15578d2298f03c8aab65ed844a1`. Subsequent documentation and CI changes do not change gameplay runtime. Preserve earlier checkpoints. Public game: https://jinjinjenn.github.io/town/. Leave the profile, mods, Cafe and Farm repositories alone.
