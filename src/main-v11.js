@@ -41,7 +41,7 @@ export function start(){
   function homeView(){following=false;world.home.setOpen(true);target.copy(world.home.origin);target.y=.8;yaw=.72;elevation=.79;viewHeight=innerWidth<700?27:17.7;const shift=innerWidth<700?4.6:.9;target.x+=Math.sin(yaw)*shift;target.z+=Math.cos(yaw)*shift;projection();renderer.shadowMap.needsUpdate=true;}
   function overview(){following=false;target.set(0,0,-2);viewHeight=innerWidth<700?61:48;elevation=.72;projection();}
   function attachMedia(){if(!world)return;media?.dispose();media=mountIllustratedLayers(world,mediaLibrary,{enabled:illustrated,evening});}mediaLibrary.ready.then(attachMedia);
-  function loadWorld(value){seed=cleanSeed(value);fixtures?.dispose();seatTargets?.dispose();life?.dispose();media?.dispose();media=null;if(world){scene.remove(world.group);world.dispose();}world=createArtWorld(kit,createWorld,seed);world.stats.v8Props=summarizeV8(world.plan);scene.add(world.group);createPetals(kit,world,ambient);atmosphere=createV7Atmosphere(kit,world,ambient);atmosphere.setEvening(evening);world.home.setPalette(load('town.palette.v5','roseMint'));seatTargets=mountV12SeatTargets(world);life=createLiveMode(world);fixtures=createHouseholdFixtures(world,life);world.step(0);selected=20;following=false;if(mediaLibrary.status!=='loading')attachMedia();homeView();try{const u=new URL(location.href);u.searchParams.set('seed',seed);history.replaceState(null,'',u);}catch{}}
+  function loadWorld(value){seed=cleanSeed(value);fixtures?.dispose();seatTargets?.dispose();life?.dispose();media?.dispose();media=null;if(world){scene.remove(world.group);world.dispose();}world=createArtWorld(kit,createWorld,seed);world.stats.v8Props=summarizeV8(world.plan);scene.add(world.group);createPetals(kit,world,ambient);atmosphere=createV7Atmosphere(kit,world,ambient);atmosphere.setEvening(evening);world.home.setPalette(load('town.palette.v5','roseMint'));life=createLiveMode(world);seatTargets=mountV12SeatTargets(world,new Set(life.nav.v12Seats.map(s=>s.seatId)));fixtures=createHouseholdFixtures(world,life);world.step(0);selected=20;following=false;if(mediaLibrary.status!=='loading')attachMedia();homeView();try{const u=new URL(location.href);u.searchParams.set('seed',seed);history.replaceState(null,'',u);}catch{}}
   function notify(text){notice=text;noticeUntil=performance.now()+2800;}
   function action(id,payload={}){
     if(id.startsWith('cancel:')){life.cancelCommand(selected,Number(id.split(':')[1]));return;}
@@ -63,7 +63,7 @@ if(id==='panel')return;if(id.startsWith('resident:')){selected=Math.max(0,Math.m
       return;
     }
     if(right)return;
-    if(m?.type==='furniture'){hud.openContext(m.activity||'tv',x-r.left,y-r.top,m);return;}
+    if(m?.type==='furniture'||m?.type==='outdoorSeat'){hud.openContext(m.activity||'tv',x-r.left,y-r.top,m);return;}
     const o=world.home.origin,ground=new THREE.Vector3(),floor=new THREE.Vector3();
     ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-(o.y+.4-.07)),floor);
     let point;
