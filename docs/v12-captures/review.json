@@ -1,24 +1,24 @@
 {
   "stats": {
-    "time": 135.91659999999484,
-    "inside": 7,
-    "chatting": 3,
+    "time": 201.09999999999016,
+    "inside": 8,
+    "chatting": 7,
     "walking": 19,
-    "visited": 25,
-    "arrivals": 20,
-    "departures": 16,
+    "visited": 21,
+    "arrivals": 17,
+    "departures": 14,
     "gathering": false,
-    "slots": 32,
-    "conversations": 6,
+    "slots": 75,
+    "conversations": 11,
     "drinks": 4,
-    "tvSessions": 2,
-    "watching": 0,
-    "drinking": 1,
-    "pairs": 1,
-    "groups": 1,
-    "maxGroup": 3,
-    "seated": 4,
-    "seatSessions": 12
+    "tvSessions": 3,
+    "watching": 1,
+    "drinking": 0,
+    "pairs": 5,
+    "groups": 2,
+    "maxGroup": 4,
+    "seated": 0,
+    "seatSessions": 1
   },
   "warnings": [
     {
@@ -26,5 +26,5 @@
       "text": "THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The \"position\" attribute is likely to have NaN values. BufferGeometry"
     }
   ],
-  "verifiedAt": "2026-11-07T17:24:06.485Z"
+  "verifiedAt": "2026-11-08T20:41:03.911Z"
 }
