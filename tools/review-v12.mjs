@@ -27,8 +27,23 @@ try{
   await page.waitForFunction(()=>window.townDebug.residents()[window.townDebug.selected()].state==='sitting',null,{timeout:15000});
   const seated=await page.evaluate(()=>window.townDebug.getStats().live.seated);assert.ok(seated>=1);
   const finiteSeat=await page.evaluate(()=>window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)));assert.deepEqual(finiteSeat,[]);stage='seat-shot';await page.screenshot({path:`${out}/TownV12-seat.png`,timeout:90000});
-  stage='group-sim';await page.evaluate(()=>{window.townDebug.action('select-target',{targetIndex:20});window.townDebug.action('chat-target',{targetIndex:6});window.townDebug.advanceSimulation(45);window.townDebug.action('select-target',{targetIndex:7});window.townDebug.action('chat-target',{targetIndex:6});window.townDebug.advanceSimulation(45);});
-  const stats=await page.evaluate(()=>window.townDebug.getStats().live);assert.ok(stats.maxGroup>=3,JSON.stringify(stats));
+  stage='group-sim';
+  await page.evaluate(()=>{window.townDebug.action('select-target',{targetIndex:20});window.townDebug.action('cancel-all');window.townDebug.action('chat-target',{targetIndex:6});});
+  let paired=false;
+  for(let i=0;i<12;i++){
+    await page.evaluate(()=>window.townDebug.advanceSimulation(20));
+    paired=await page.evaluate(()=>window.townDebug.residents()[20].socialGroup?.includes(6)??window.townDebug.residents()[20].partner===6);
+    if(paired)break;
+  }
+  assert.ok(paired,'Directed chat never reached its requested partner.');
+  await page.evaluate(()=>{window.townDebug.action('select-target',{targetIndex:7});window.townDebug.action('cancel-all');window.townDebug.action('chat-target',{targetIndex:6});});
+  let joined=false,stats;
+  for(let i=0;i<14;i++){
+    await page.evaluate(()=>window.townDebug.advanceSimulation(15));
+    stats=await page.evaluate(()=>window.townDebug.getStats().live);
+    if(stats.maxGroup>=3){joined=true;break;}
+  }
+  assert.ok(joined,'A third resident never joined the conversation: '+JSON.stringify(stats));
   const finiteGroup=await page.evaluate(()=>({residents:window.townDebug.residents().filter(r=>!r.position.every(Number.isFinite)),controls:window.townDebug.hud().controls.filter(c=>![c.x,c.y,c.w,c.h].every(Number.isFinite))}));assert.deepEqual(finiteGroup,{residents:[],controls:[]});stage='group-shot';await page.screenshot({path:`${out}/TownV12-group.png`,timeout:90000});
   if(warnings.length)console.log('V12 recorded pre-existing-style Three warning',JSON.stringify(warnings));if(errors.length)console.error('V12 staged console errors',JSON.stringify(errors));assert.deepEqual(errors,[]);
   await writeFile(`${out}/review.json`,JSON.stringify({stats,warnings,verifiedAt:new Date().toISOString()},null,2));
