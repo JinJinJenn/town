@@ -28,15 +28,15 @@ jobs:
           npm test
       - name: Install the browser
         run: npx playwright install --with-deps chromium
-      - name: Verify V12 seats, groups and phone layout
-        run: node tools/review-v12.mjs
+      - name: Verify V13 seated-to-standing animation and phone layout
+        run: node tools/review-v13.mjs
       - name: Package source and evidence even when a check fails
         if: always()
         run: |
           mkdir -p town-checkpoint
           git archive HEAD | tar -x -C town-checkpoint
           if [ -d vendor ]; then cp -R vendor town-checkpoint/; fi
-          if [ -d artifacts-v12 ]; then cp -R artifacts-v12 town-checkpoint/; fi
+          if [ -d artifacts-v13 ]; then cp -R artifacts-v13 town-checkpoint/; fi
           printf '%s\n' "$GITHUB_SHA" > town-checkpoint/COMMIT.txt
           cd town-checkpoint
           find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
