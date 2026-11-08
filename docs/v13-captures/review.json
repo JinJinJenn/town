@@ -1,0 +1,283 @@
+{
+  "version": 13,
+  "source": "http://127.0.0.1:4173/town/",
+  "checked": "2026-11-08T21:24:10.814Z",
+  "sofa": {
+    "before": {
+      "index": 20,
+      "name": "Luca",
+      "state": "watching TV",
+      "visits": 1,
+      "node": 760,
+      "destination": 760,
+      "position": [
+        9,
+        0.3455965883973986,
+        12.1
+      ],
+      "routeLength": 0,
+      "speed": 0,
+      "partner": null,
+      "activity": "tv",
+      "sitBlend": 1,
+      "getUpRemaining": 0,
+      "exitSeat": null,
+      "renderY": 0.3455965883973986,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [],
+      "error": null,
+      "logicalPosition": {
+        "x": 9,
+        "y": 0.706,
+        "z": 12.1
+      }
+    },
+    "middle": {
+      "index": 20,
+      "name": "Luca",
+      "state": "standing up",
+      "visits": 1,
+      "node": 760,
+      "destination": null,
+      "position": [
+        9,
+        0.6822585137662408,
+        12.1
+      ],
+      "routeLength": 0,
+      "speed": 0,
+      "partner": null,
+      "sitBlend": 0.0658747544264029,
+      "getUpRemaining": 0.4799999999999999,
+      "exitSeat": "tv",
+      "renderY": 0.6822585137662408,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [
+        {
+          "id": 1,
+          "kind": "go",
+          "targetIndex": null,
+          "targetSeat": null,
+          "point": {
+            "x": 10.8,
+            "z": 13.9
+          },
+          "label": "Go here",
+          "active": false
+        }
+      ],
+      "error": null,
+      "logicalPosition": {
+        "x": 9,
+        "y": 0.706,
+        "z": 12.1
+      }
+    },
+    "after": {
+      "index": 20,
+      "name": "Luca",
+      "state": "going here",
+      "visits": 1,
+      "node": 760,
+      "destination": null,
+      "position": [
+        9.041892125426246,
+        0.7124800463719886,
+        12.653906991747062
+      ],
+      "routeLength": 8,
+      "speed": 1.1199999999999999,
+      "partner": null,
+      "sitBlend": 0,
+      "getUpRemaining": 0,
+      "exitSeat": null,
+      "renderY": 0.7124800463719886,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [
+        {
+          "id": 1,
+          "kind": "go",
+          "targetIndex": null,
+          "targetSeat": null,
+          "point": {
+            "x": 10.8,
+            "z": 13.9
+          },
+          "label": "Go here",
+          "started": 3.0567333333333315,
+          "destination": {
+            "x": 10.8,
+            "y": 0.706,
+            "z": 13.9
+          },
+          "active": true
+        }
+      ],
+      "error": null,
+      "logicalPosition": {
+        "x": 9.041892125426246,
+        "y": 0.706,
+        "z": 12.653906991747062
+      }
+    },
+    "requested": {
+      "x": 10.8,
+      "z": 13.9
+    }
+  },
+  "lounger": {
+    "seated": {
+      "index": 20,
+      "name": "Luca",
+      "state": "sitting",
+      "visits": 2,
+      "node": 2043,
+      "destination": 2043,
+      "position": [
+        16.25,
+        -0.04440082855476617,
+        17.55
+      ],
+      "routeLength": 0,
+      "speed": 0,
+      "partner": null,
+      "activity": "seat",
+      "sitBlend": 0.9999938557876467,
+      "getUpRemaining": 0,
+      "exitSeat": null,
+      "renderY": -0.04440082855476617,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [
+        {
+          "id": 2,
+          "kind": "seat",
+          "targetIndex": null,
+          "targetSeat": "home-lounger",
+          "point": null,
+          "label": "Sit",
+          "started": 4.303433333333325,
+          "startedActivity": true,
+          "active": true
+        }
+      ],
+      "error": null,
+      "logicalPosition": {
+        "x": 16.25,
+        "y": 0.376,
+        "z": 17.55
+      }
+    },
+    "mid": {
+      "index": 20,
+      "name": "Luca",
+      "state": "standing up",
+      "visits": 2,
+      "node": 2043,
+      "destination": null,
+      "position": [
+        16.25,
+        0.36451301452881835,
+        17.55
+      ],
+      "routeLength": 0,
+      "speed": 0,
+      "partner": null,
+      "sitBlend": 0.02732372086943832,
+      "getUpRemaining": 0.36999999999999994,
+      "exitSeat": "home-lounger",
+      "renderY": 0.36451301452881835,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [],
+      "error": null,
+      "logicalPosition": {
+        "x": 16.25,
+        "y": 0.376,
+        "z": 17.55
+      }
+    },
+    "standing": {
+      "index": 20,
+      "name": "Luca",
+      "state": "standing",
+      "visits": 2,
+      "node": 2043,
+      "destination": null,
+      "position": [
+        16.25,
+        0.3760000000000003,
+        17.55
+      ],
+      "routeLength": 0,
+      "speed": 0,
+      "partner": null,
+      "sitBlend": 0,
+      "getUpRemaining": 0,
+      "exitSeat": null,
+      "renderY": 0.3760000000000003,
+      "appearance": {
+        "skin": "#efc6a0",
+        "shirt": "#559d92",
+        "hair": "#aa743e",
+        "pants": "#596c79",
+        "style": 0,
+        "hat": false,
+        "glasses": false
+      },
+      "commands": [],
+      "error": null,
+      "logicalPosition": {
+        "x": 16.25,
+        "y": 0.376,
+        "z": 17.55
+      }
+    }
+  },
+  "renderer": {
+    "drawCalls": 57,
+    "triangles": 1058204,
+    "hudCalls": 1
+  },
+  "warnings": [
+    "THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The \"position\" attribute is likely to have NaN values. BufferGeometry"
+  ]
+}
