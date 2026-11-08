@@ -6,6 +6,10 @@ import {addV12SeatSlots} from './v12-seats.js';
 
 const angleDelta=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// Stand before routing away from occupied furniture. Keep the outgoing hip pivot
+// until the full seated-to-standing transition ends, including outdoor seats.
+const GET_UP_SECONDS=.82;
+const isSeatActivity=slot=>slot&&['seat','tv','drink'].includes(slot.activity);
 
 export function makeHouseholdNavigation(plan,origin){
   const nav=makeLiveNavigation(plan,origin);
@@ -26,11 +30,17 @@ export function makeHouseholdNavigation(plan,origin){
 export function createHousehold(world){
   const nav=makeHouseholdNavigation(world.plan,world.home.origin),random=rng(`${world.plan.seed}:household10`),reserved=new Map(),byNode=new Map(nav.slots.map(s=>[s.node,s])),agents=[];
   let commandId=0;const node=id=>nav.nodes[id];let time=0,arrivals=0,departures=0,conversations=0,drinks=0,tvSessions=0,seatSessions=0,gathering=false;const socialSignatures=new Map(),socialStarts=new Map();
-  const free=list=>{const start=Math.floor(random()*list.length);for(let j=0;j<list.length;j++){const id=list[(start+j)%list.length];if(!reserved.has(id))return id;}return null;};
-  function release(a){const old=[...(a.socialGroup||[])];a.socialGroup=[];a.partner=null;for(const idx of old){const b=agents[idx];if(!b||b===a)continue;b.socialGroup=(b.socialGroup||[]).filter(i=>i!==a.index);b.partner=b.socialGroup.length>1?(b.socialGroup.find(i=>i!==b.index)??null):null;if(b.partner===null&&b.slot?.activity==='talk'){b.state='waiting for a chat';b.dwell=Math.min(b.dwell,2);}}if(reserved.get(a.reserved)===a.index)reserved.delete(a.reserved);a.reserved=null;}
+  const free=list=>{const start=Math.floor(random()*list.length);for(let j=0;j<list.length;j++){const id=list[(start+j)%list.length];if(!isBlocked(id))return id;}return null;};
+  function beginGetUp(a){
+    if(a.getUpRemaining>0||a.sit<.075||!isSeatActivity(a.slot))return;
+    a.exitSlot=a.slot;a.getUpRemaining=GET_UP_SECONDS;a.getUpCount++;a.speed=0;
+  }
+  // A released seat is not reusable while its previous Sim is standing up.
+  function isBlocked(id){return reserved.has(id)||agents.some(a=>a.getUpRemaining>0&&a.exitSlot?.node===id);}
+  function release(a){beginGetUp(a);const old=[...(a.socialGroup||[])];a.socialGroup=[];a.partner=null;for(const idx of old){const b=agents[idx];if(!b||b===a)continue;b.socialGroup=(b.socialGroup||[]).filter(i=>i!==a.index);b.partner=b.socialGroup.length>1?(b.socialGroup.find(i=>i!==b.index)??null):null;if(b.partner===null&&b.slot?.activity==='talk'){b.state='waiting for a chat';b.dwell=Math.min(b.dwell,2);}}if(reserved.get(a.reserved)===a.index)reserved.delete(a.reserved);a.reserved=null;}
   function claim(a,id){release(a);reserved.set(id,a.index);a.reserved=id;}
   function initial(a,id){a.node=id;a.pos={x:node(id).x,y:node(id).y,z:node(id).z};a.route=[];a.cursor=0;a.slot=byNode.get(id)||null;claim(a,id);a.state=a.slot?'settling':'strolling';a.settle=a.slot?.2:0;a.dwell=a.slot?30:0;a.face=a.slot?.facing??random()*Math.PI*2;}
-  for(const r of world.residents){const ring=nav.rings.get(r.lot.id),id=ring[Math.floor(((r.distance%73.76)+73.76)%73.76/73.76*32)],a={actor:r,index:r.meta.index,node:id,pos:{},route:[],cursor:0,state:'strolling',speed:0,stride:r.phase,walk:0,face:r.root.rotation.y,reserved:null,slot:null,partner:null,visits:0,visitDue:5+r.meta.index*.8,dwell:0,settle:0,sit:0,activityTime:0,pending:null,priority:false,conversationStart:0,socialGroup:[],commands:[],activeCommand:null,manualHold:0,commandError:null,goNode:nav.nodes.length};nav.nodes.push({id:a.goNode,x:0,y:0,z:0,zone:'goal',edges:[]});agents.push(a);initial(a,id);}
+  for(const r of world.residents){const ring=nav.rings.get(r.lot.id),id=ring[Math.floor(((r.distance%73.76)+73.76)%73.76/73.76*32)],a={actor:r,index:r.meta.index,node:id,pos:{},route:[],cursor:0,state:'strolling',speed:0,stride:r.phase,walk:0,face:r.root.rotation.y,reserved:null,slot:null,partner:null,visits:0,visitDue:5+r.meta.index*.8,dwell:0,settle:0,sit:0,exitSlot:null,getUpRemaining:0,getUpCount:0,activityTime:0,pending:null,priority:false,conversationStart:0,socialGroup:[],commands:[],activeCommand:null,manualHold:0,commandError:null,goNode:nav.nodes.length};nav.nodes.push({id:a.goNode,x:0,y:0,z:0,zone:'goal',edges:[]});agents.push(a);initial(a,id);}
   const talkSlots=nav.slots.filter(s=>s.activity==='talk'),drinkSlots=nav.slots.filter(s=>s.activity==='drink'),tvSlot=nav.slots.find(s=>s.activity==='tv');
   for(let i=0;i<4;i++)initial(agents[i],talkSlots[i].node);
   initial(agents[4],drinkSlots[0].node);initial(agents[5],drinkSlots[1].node);initial(agents[20],tvSlot.node);
@@ -51,14 +61,14 @@ export function createHousehold(world){
     for(const b of members){b.socialGroup=[...ids];const k=ids.indexOf(b.index),ownTarget=b.activeCommand?.kind==='talk'&&Number.isInteger(b.activeCommand.targetIndex)&&ids.includes(b.activeCommand.targetIndex)?b.activeCommand.targetIndex:null,inviter=members.find(m=>m.activeCommand?.kind==='talk'&&m.activeCommand.targetIndex===b.index),preferred=ownTarget??inviter?.index??null;b.partner=preferred??ids[(k+1)%ids.length];b.conversationStart=start;b.dwell=Math.max(b.dwell,60+random()*20);b.state='talking';b.face=Math.atan2(cx-b.pos.x,cz-b.pos.z);if(b.activeCommand?.kind==='talk'&&ids.includes(b.activeCommand.targetIndex))b.activeCommand.conversed=true;}
   }
   function depart(a){const id=free(nav.publicSlots);if(id!==null&&travel(a,id)){departures++;return true;}a.dwell=2;return false;}
-  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(kind?s.activity===kind:s.activity!=='seat')&&!reserved.has(s.node)&&!agents.some(b=>b!==a&&(b.pending===s.activity||b.activeCommand?.kind===s.activity)&&b.index<a.index));if(!choices.length)return null;
+  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(kind?s.activity===kind:s.activity!=='seat')&&!isBlocked(s.node)&&!agents.some(b=>b!==a&&(b.pending===s.activity||b.activeCommand?.kind===s.activity)&&b.index<a.index));if(!choices.length)return null;
     // Finish existing pairs before starting another unpaired conversation.
     const waiting=choices.filter(s=>s.activity==='talk'&&nav.slots.some(t=>t.activity==='talk'&&(t.group??t.pair)===(s.group??s.pair)&&t.node!==s.node&&reserved.has(t.node)));if(!kind&&waiting.length)choices=waiting;
     return choices[Math.floor(random()*choices.length)];}
   function decide(a){if(Number.isInteger(a.invitedBy)){const inviter=agents[a.invitedBy];if(inviter?.activeCommand?.targetIndex===a.index&&!inviter.activeCommand.conversed){a.dwell=.5;return;}a.invitedBy=null;}if(a.activeCommand||a.commands.length){driveCommands(a);return;}if(time<a.manualHold){a.state='standing';a.dwell=Math.min(1,a.manualHold-time);return;}if(a.pending){const slot=chooseSlot(a,a.pending);if(slot&&travel(a,slot.node)){a.pending=null;return;}}
     if(a.slot){depart(a);return;}if(a.priority||time>=a.visitDue){const slot=chooseSlot(a);if(slot){travel(a,slot.node);return;}}
     const id=free(nav.publicSlots);if(id!==null&&id!==a.node)travel(a,id);else a.dwell=1;}
-  function animate(a,dt){const r=a.actor,blend=1-Math.exp(-dt*8),sitting=a.slot&&['watching TV','having a drink','sitting'].includes(a.state);a.walk+=(clamp(a.speed/1.2,0,1)-a.walk)*blend;a.sit+=(Number(!!sitting)-a.sit)*blend;
+  function animate(a,dt){const r=a.actor,blend=1-Math.exp(-dt*8),sitting=a.slot&&['watching TV','having a drink','sitting'].includes(a.state);a.walk+=(clamp(a.speed/1.2,0,1)-a.walk)*blend;a.sit+=(Number(!!sitting)-a.sit)*blend;a.sit=clamp(a.sit,0,1);
     r.root.rotation.y+=clamp(angleDelta(a.face,r.root.rotation.y),-3.6*dt,3.6*dt);const w=a.walk*(1-a.sit),s=a.sit,wave=Math.sin(a.stride),grouped=(a.socialGroup?.length??0)>1&&!a.route.length;
     const order=grouped?a.socialGroup.indexOf(a.index):0,speaking=grouped&&(Math.floor((time-a.conversationStart)/2.8)%a.socialGroup.length===order);if(grouped)a.state=speaking?'talking':'listening';a.speaking=speaking;
     const gesture=speaking?.5+.5*Math.sin(a.activityTime*3.6):0,sip=a.state==='having a drink'?Math.pow(Math.max(0,Math.sin(a.activityTime*.9)),3):0;
@@ -69,7 +79,9 @@ export function createHousehold(world){
     r.head.position.y=(r.headHeight??1.48)+Math.abs(wave)*.006*w;r.head.rotation.x=grouped&&!speaking?Math.sin(time*3.2+a.index)*.055:sip*.06;r.head.rotation.y=a.state==='watching TV'?.78+Math.sin(time*.8)*.025:grouped?Math.sin(time*1.7)*.055:0;
     if(r.torso)r.torso.rotation.y=a.state==='watching TV'?.17:0;
     if(r.cup){r.cup.scale.setScalar(a.state==='having a drink'?1:.0001);r.cup.rotation.x=-(r.arms[1].rotation.x+(r.elbows?.[1].rotation.x??0));}
-    const hipY=a.slot?.hipY||.45,seatFloor=a.slot?.activity==='seat'?node(a.slot.node).y:world.home.origin.y+FLOOR_Y,seatY=seatFloor+hipY-(r.hipHeight??.73)*r.root.scale.x;
+    const poseSlot=a.exitSlot||a.slot;
+    const hipY=poseSlot?.hipY??.45,seatFloor=poseSlot?.activity==='seat'?node(poseSlot.node).y:world.home.origin.y+FLOOR_Y;
+    const seatY=seatFloor+hipY-(r.hipHeight??.73)*r.root.scale.x;
     const street=node(a.node).zone==='street'&&a.route.length,lane=street?.14:0;r.root.position.set(a.pos.x+Math.cos(a.face)*lane,a.pos.y+(seatY-a.pos.y)*s+Math.abs(wave)*.012*w,a.pos.z-Math.sin(a.face)*lane);
     r.meta.description=a.state[0].toUpperCase()+a.state.slice(1)+'.';
   }
@@ -93,14 +105,14 @@ export function createHousehold(world){
       const b=agents[c.targetIndex];if(!b||b===a){finishCommand(a,'Choose another resident.');return;}
       if(b.slot?.activity==='talk'&&!b.route.length){
         const gid=b.slot.group??b.slot.pair;
-        let freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!reserved.has(s.node));
+        let freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!isBlocked(s.node));
         // Manual chats can displace idle group members, but never a player order.
         if(!freeSlot){const guest=agents.find(other=>other!==a&&other!==b&&other.slot?.activity==='talk'&&(other.slot.group??other.slot.pair)===gid&&!other.activeCommand&&!other.commands.length&&!Number.isInteger(other.invitedBy));
           if(guest){interrupt(guest);guest.manualHold=time+8;guest.dwell=8;freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!reserved.has(s.node));}}
         if(freeSlot){slot=freeSlot;c.invited=b.index;}
       }
-      else{if(b.activeCommand||b.commands.length){a.state='waiting to chat';a.dwell=.5;if(time-c.started>60)finishCommand(a,'That resident is busy.');return;}for(let groupId=0;groupId<3;groupId++){const groupSlots=nav.slots.filter(s=>s.activity==='talk'&&(s.group??s.pair)===groupId),freeSlots=groupSlots.filter(s=>!reserved.has(s.node));if(freeSlots.length>=2){interrupt(b);b.invitedBy=a.index;c.invited=b.index;slot=freeSlots[0];travel(b,freeSlots[1].node);break;}}}
-    }else if(c.kind==='seat'&&c.targetSeat)slot=nav.slots.find(s=>s.activity==='seat'&&s.seatId===c.targetSeat&&!reserved.has(s.node));
+      else{if(b.activeCommand||b.commands.length){a.state='waiting to chat';a.dwell=.5;if(time-c.started>60)finishCommand(a,'That resident is busy.');return;}for(let groupId=0;groupId<3;groupId++){const groupSlots=nav.slots.filter(s=>s.activity==='talk'&&(s.group??s.pair)===groupId),freeSlots=groupSlots.filter(s=>!isBlocked(s.node));if(freeSlots.length>=2){interrupt(b);b.invitedBy=a.index;c.invited=b.index;slot=freeSlots[0];travel(b,freeSlots[1].node);break;}}}
+    }else if(c.kind==='seat'&&c.targetSeat)slot=nav.slots.find(s=>s.activity==='seat'&&s.seatId===c.targetSeat&&!isBlocked(s.node));
     else slot=chooseSlot(a,c.kind);
     if(slot){travel(a,slot.node);c.startedActivity=true;return;}
     a.state='waiting for '+(c.kind==='drink'?'a chair':c.kind==='tv'?'the sofa':c.kind==='seat'?'a seat':'a conversation');a.dwell=.5;
@@ -115,7 +127,18 @@ export function createHousehold(world){
   function cancelAll(index){const a=agents[index];if(!a)return false;a.commands=[];finishCommand(a);return true;}
   function getCommands(index){const a=agents[index];return a?[...(a.activeCommand?[{...a.activeCommand,active:true}]:[]),...a.commands.map(c=>({...c,active:false}))]:[];}
   function step(dt){if(!Number.isFinite(dt)||dt<0)return;time+=dt;
-    for(const a of agents){a.activityTime+=dt;if(!a.route.length){if(a.commands.length&&!a.activeCommand){driveCommands(a);} if(a.route.length){}else if(a.settle>0){a.settle=Math.max(0,a.settle-dt);if(a.settle===0)startActivity(a);}else{if(a.state==='waiting for a chat')pair(a);a.dwell-=dt;if(a.dwell<=0)decide(a);}}
+    for(const a of agents){a.activityTime+=dt;
+      if(a.getUpRemaining>0){
+        a.getUpRemaining=Math.max(0,a.getUpRemaining-dt);
+        a.state='standing up';a.speed=0; // no path advance while legs are bent
+        animate(a,dt);
+        if(a.getUpRemaining===0){
+          a.exitSlot=null;a.sit=0;a.actor.root.position.y=a.pos.y;
+          a.state=a.route.length?'walking':'standing';
+        }
+        continue;
+      }
+      if(!a.route.length){if(a.commands.length&&!a.activeCommand){driveCommands(a);} if(a.route.length){}else if(a.settle>0){a.settle=Math.max(0,a.settle-dt);if(a.settle===0)startActivity(a);}else{if(a.state==='waiting for a chat')pair(a);a.dwell-=dt;if(a.dwell<=0)decide(a);}}
       if(a.route.length){const target=node(a.route[a.cursor]),dx=target.x-a.pos.x,dy=target.y-a.pos.y,dz=target.z-a.pos.z,d=Math.hypot(dx,dy,dz);if(d>.001)a.face=Math.atan2(dx,dz);
         let desired=1.12+a.index%5*.06;desired*=1-Math.min(.65,Math.abs(angleDelta(a.face,a.actor.root.rotation.y))/Math.PI);if(a.sit>.06)desired*=1-a.sit;if(a.cursor===a.route.length-1)desired=Math.min(desired,Math.max(.18,d*2));
         for(const b of agents){if(a===b||!b.route.length)continue;const bx=b.pos.x-a.pos.x,bz=b.pos.z-a.pos.z,forward=bx*Math.sin(a.face)+bz*Math.cos(a.face),side=Math.abs(bx*Math.cos(a.face)-bz*Math.sin(a.face));if(forward>0&&forward<.64&&side<.24&&Math.cos(a.face-b.face)>.55)desired=Math.min(desired,Math.max(.10,(forward-.28)*2));}
@@ -126,7 +149,7 @@ export function createHousehold(world){
   function legacyRequestActivity(index,kind){const a=agents[index];if(!a||!['tv','drink','talk'].includes(kind))return false;if(a.slot?.activity===kind&&!a.route.length){a.pending=null;a.dwell=0;release(a);return true;}a.pending=kind;a.priority=true;if(!a.route.length)a.dwell=0;return true;}
   const requestActivity=(index,kind)=>command(index,kind).ok;
   function gather(){gathering=true;for(const a of agents){a.priority=true;a.visitDue=0;if(!a.route.length&&!a.slot)a.dwell=0;}return true;}
-  function stats(){return {time,inside:agents.filter(a=>a.pos.x>world.home.origin.x-5.6&&a.pos.x<world.home.origin.x+5.6&&a.pos.z>world.home.origin.z-4.6&&a.pos.z<world.home.origin.z+4.6).length,chatting:agents.filter(a=>a.partner!==null).length,walking:agents.filter(a=>a.route.length).length,visited:agents.filter(a=>a.visits>0).length,arrivals,departures,gathering,slots:nav.slots.length,conversations,drinks,tvSessions,watching:agents.filter(a=>a.state==='watching TV').length,drinking:agents.filter(a=>a.state==='having a drink').length,pairs:agents.filter(a=>a.partner!==null&&a.index<a.partner).length,groups:new Set(agents.filter(a=>(a.socialGroup?.length??0)>1).map(a=>a.slot?.group??a.slot?.pair)).size,maxGroup:Math.max(0,...agents.map(a=>a.socialGroup?.length??0)),seated:agents.filter(a=>a.state==='sitting').length,seatSessions};}
+  function stats(){return {time,inside:agents.filter(a=>a.pos.x>world.home.origin.x-5.6&&a.pos.x<world.home.origin.x+5.6&&a.pos.z>world.home.origin.z-4.6&&a.pos.z<world.home.origin.z+4.6).length,chatting:agents.filter(a=>a.partner!==null).length,walking:agents.filter(a=>a.route.length).length,visited:agents.filter(a=>a.visits>0).length,arrivals,departures,gathering,slots:nav.slots.length,conversations,drinks,tvSessions,watching:agents.filter(a=>a.state==='watching TV').length,drinking:agents.filter(a=>a.state==='having a drink').length,pairs:agents.filter(a=>a.partner!==null&&a.index<a.partner).length,groups:new Set(agents.filter(a=>(a.socialGroup?.length??0)>1).map(a=>a.slot?.group??a.slot?.pair)).size,maxGroup:Math.max(0,...agents.map(a=>a.socialGroup?.length??0)),seated:agents.filter(a=>a.state==='sitting').length,standingUp:agents.filter(a=>a.getUpRemaining>0).length,getUps:agents.reduce((n,a)=>n+a.getUpCount,0),seatSessions};}
   return {nav,agents,step,gather,command,cancelCommand,cancelAll,getCommands,requestActivity,requestSit:index=>requestActivity(index,'tv'),stats,doorWanted:()=>agents.some(a=>a.route.length&&Math.abs(a.pos.x-world.home.origin.x)<1&&Math.abs(a.pos.z-world.home.origin.z-4.7)<2.5),dispose(){world.setLiveController(null);reserved.clear();}};
 }
 
