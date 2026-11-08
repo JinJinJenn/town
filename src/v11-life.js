@@ -51,7 +51,7 @@ export function createHousehold(world){
     for(const b of members){b.socialGroup=[...ids];const k=ids.indexOf(b.index),ownTarget=b.activeCommand?.kind==='talk'&&Number.isInteger(b.activeCommand.targetIndex)&&ids.includes(b.activeCommand.targetIndex)?b.activeCommand.targetIndex:null,inviter=members.find(m=>m.activeCommand?.kind==='talk'&&m.activeCommand.targetIndex===b.index),preferred=ownTarget??inviter?.index??null;b.partner=preferred??ids[(k+1)%ids.length];b.conversationStart=start;b.dwell=Math.max(b.dwell,60+random()*20);b.state='talking';b.face=Math.atan2(cx-b.pos.x,cz-b.pos.z);if(b.activeCommand?.kind==='talk'&&ids.includes(b.activeCommand.targetIndex))b.activeCommand.conversed=true;}
   }
   function depart(a){const id=free(nav.publicSlots);if(id!==null&&travel(a,id)){departures++;return true;}a.dwell=2;return false;}
-  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(!kind||s.activity===kind)&&!reserved.has(s.node)&&!agents.some(b=>b!==a&&(b.pending===s.activity||b.activeCommand?.kind===s.activity)&&b.index<a.index));if(!choices.length)return null;
+  function chooseSlot(a,kind=null){let choices=nav.slots.filter(s=>(kind?s.activity===kind:s.activity!=='seat')&&!reserved.has(s.node)&&!agents.some(b=>b!==a&&(b.pending===s.activity||b.activeCommand?.kind===s.activity)&&b.index<a.index));if(!choices.length)return null;
     // Finish existing pairs before starting another unpaired conversation.
     const waiting=choices.filter(s=>s.activity==='talk'&&nav.slots.some(t=>t.activity==='talk'&&(t.group??t.pair)===(s.group??s.pair)&&t.node!==s.node&&reserved.has(t.node)));if(!kind&&waiting.length)choices=waiting;
     return choices[Math.floor(random()*choices.length)];}
@@ -69,7 +69,7 @@ export function createHousehold(world){
     r.head.position.y=(r.headHeight??1.48)+Math.abs(wave)*.006*w;r.head.rotation.x=grouped&&!speaking?Math.sin(time*3.2+a.index)*.055:sip*.06;r.head.rotation.y=a.state==='watching TV'?.78+Math.sin(time*.8)*.025:grouped?Math.sin(time*1.7)*.055:0;
     if(r.torso)r.torso.rotation.y=a.state==='watching TV'?.17:0;
     if(r.cup){r.cup.scale.setScalar(a.state==='having a drink'?1:.0001);r.cup.rotation.x=-(r.arms[1].rotation.x+(r.elbows?.[1].rotation.x??0));}
-    const hipY=a.slot?.hipY||.45,seatY=world.home.origin.y+FLOOR_Y+hipY-(r.hipHeight??.73)*r.root.scale.x;
+    const hipY=a.slot?.hipY||.45,seatFloor=a.slot?.activity==='seat'?node(a.slot.node).y:world.home.origin.y+FLOOR_Y,seatY=seatFloor+hipY-(r.hipHeight??.73)*r.root.scale.x;
     const street=node(a.node).zone==='street'&&a.route.length,lane=street?.14:0;r.root.position.set(a.pos.x+Math.cos(a.face)*lane,a.pos.y+(seatY-a.pos.y)*s+Math.abs(wave)*.012*w,a.pos.z-Math.sin(a.face)*lane);
     r.meta.description=a.state[0].toUpperCase()+a.state.slice(1)+'.';
   }
@@ -91,7 +91,14 @@ export function createHousehold(world){
     let slot;
     if(c.kind==='talk'&&Number.isInteger(c.targetIndex)){
       const b=agents[c.targetIndex];if(!b||b===a){finishCommand(a,'Choose another resident.');return;}
-      if(b.slot?.activity==='talk'&&!b.route.length){const gid=b.slot.group??b.slot.pair,freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!reserved.has(s.node));if(freeSlot){slot=freeSlot;c.invited=b.index;}}
+      if(b.slot?.activity==='talk'&&!b.route.length){
+        const gid=b.slot.group??b.slot.pair;
+        let freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!reserved.has(s.node));
+        // Manual chats can displace idle group members, but never a player order.
+        if(!freeSlot){const guest=agents.find(other=>other!==a&&other!==b&&other.slot?.activity==='talk'&&(other.slot.group??other.slot.pair)===gid&&!other.activeCommand&&!other.commands.length&&!Number.isInteger(other.invitedBy));
+          if(guest){interrupt(guest);guest.manualHold=time+8;guest.dwell=8;freeSlot=nav.slots.find(s=>s.activity==='talk'&&(s.group??s.pair)===gid&&!reserved.has(s.node));}}
+        if(freeSlot){slot=freeSlot;c.invited=b.index;}
+      }
       else{if(b.activeCommand||b.commands.length){a.state='waiting to chat';a.dwell=.5;if(time-c.started>60)finishCommand(a,'That resident is busy.');return;}for(let groupId=0;groupId<3;groupId++){const groupSlots=nav.slots.filter(s=>s.activity==='talk'&&(s.group??s.pair)===groupId),freeSlots=groupSlots.filter(s=>!reserved.has(s.node));if(freeSlots.length>=2){interrupt(b);b.invitedBy=a.index;c.invited=b.index;slot=freeSlots[0];travel(b,freeSlots[1].node);break;}}}
     }else if(c.kind==='seat'&&c.targetSeat)slot=nav.slots.find(s=>s.activity==='seat'&&s.seatId===c.targetSeat&&!reserved.has(s.node));
     else slot=chooseSlot(a,c.kind);
