@@ -54,3 +54,28 @@ test('V12 group cancellation removes one Sim without destroying the remaining co
   assert.ok(live.agents[6].socialGroup.includes(7));live.cancelAll(7);assert.equal(live.agents[7].socialGroup.length,0);
   assert.ok(live.agents[6].socialGroup.length>=2);
 });
+
+test('V12 routes all available outdoor chairs through the proper lot entrance',()=>{
+ const w=mockWorld(),nav=makeHouseholdNavigation(w.plan,w.home.origin),planned=planV12Seats(w.plan);
+ assert.ok(planned.length>=55,'Expected garden, cafe, picnic, chess and park seating');
+ assert.equal(new Set(planned.map(s=>s.id)).size,planned.length,'Seat IDs must be unique');
+ assert.equal(nav.v12Seats.length,planned.length,'Never expose unreachable seats');
+ assert.ok(nav.v12Seats.some(s=>w.plan.lots[s.lot].kind==='cafe'));
+ assert.ok(nav.v12Seats.some(s=>!w.plan.lots[s.lot].furnished&&w.plan.lots[s.lot].kind==='cottage'));
+ for(const seat of nav.v12Seats){
+   const start=nav.rings.get(seat.lot)[20],route=nav.route(start,seat.node);
+   assert.ok(route.length>0,'Unreachable seat '+seat.id);
+   assert.equal(route.at(-1),seat.node);
+ }
+});
+test('V12 rotated garden benches match actual Three.js world-space positions',()=>{
+ const w=mockWorld(),seats=planV12Seats(w.plan);
+ const rotated=w.plan.lots.find(l=>!l.furnished&&l.kind==='cottage'&&Math.abs(l.rotation)>1);
+ assert.ok(rotated,'Expected a rotated house in the test neighborhood');
+ const bench=seats.filter(s=>s.id.startsWith('lot-'+rotated.id+'-bench-'));
+ assert.equal(bench.length,2);
+ const c=Math.cos(rotated.rotation),sin=Math.sin(rotated.rotation);
+ const x=rotated.x+6.8*c+2.5*sin,z=rotated.z-6.8*sin+2.5*c;
+ const avg={x:(bench[0].x+bench[1].x)/2,z:(bench[0].z+bench[1].z)/2};
+ assert.ok(Math.hypot(avg.x-x,avg.z-z)<1e-8);
+});
