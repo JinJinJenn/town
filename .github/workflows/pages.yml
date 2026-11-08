@@ -144,10 +144,10 @@ jobs:
           NODE
       - name: Install the live verification browser
         run: npx playwright install --with-deps chromium
-      - name: Verify V12 seating and multi-Sim socials on the public website
+      - name: Verify V13 sofa and outdoor seating animation on the public website
         env:
           SITE_URL: https://jinjinjenn.github.io/town/
-        run: node tools/review-v12.mjs
+        run: node tools/review-v13.mjs
       - name: Retain public deployment verification
         if: always()
         uses: actions/upload-artifact@v4
