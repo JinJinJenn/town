@@ -44,6 +44,8 @@ jobs:
           npm test
       - name: Stage the public game with a deployment manifest
         shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           mkdir -p _site
@@ -66,23 +68,29 @@ jobs:
           }
           await scan();
           for (const file of ['index.html', 'style.css', 'src/main.js', 'src/main-v11.js', 'src/v11-hud.js', 'src/v11-life.js', 'src/v11-navigation.js', 'src/v12-seats.js', 'src/v10-characters.js', 'src/v10-fixtures.js', 'vendor/three.module.js', 'vendor/three.core.js', 'vendor/THREE-LICENSE.txt']) assert.ok(files[file], `Missing runtime file: ${file}`);
-          await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.GITHUB_SHA, files }, null, 2));
+          assert.match(process.env.SOURCE_COMMIT ?? '', /^[0-9a-f]{40}$/, 'Expected source commit must be set');
+          await writeFile('_site/__deployment.json', JSON.stringify({ commit: process.env.SOURCE_COMMIT, files }, null, 2));
           console.log(`Prepared ${Object.keys(files).length} public files with same-origin renderer imports.`);
           NODE
       - name: Publish built files to the configured source branch
         id: publish
         shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           git fetch origin gh-pages
           publish_dir="$RUNNER_TEMP/town-public"
           git worktree add --detach "$publish_dir" FETCH_HEAD
           rsync -a --delete --exclude='.git' _site/ "$publish_dir/"
+          # Pin the manifest to the source SHA even on workflow-only updates.
+          node -e 'const fs=require("node:fs"),p=process.argv[1],m=JSON.parse(fs.readFileSync(p,"utf8"));m.commit=process.env.SOURCE_COMMIT;fs.writeFileSync(p,JSON.stringify(m,null,2))' "$publish_dir/__deployment.json"
+          echo "Publishing source $SOURCE_COMMIT with $(git -C "$publish_dir" status --short | wc -l) changed paths"
           git -C "$publish_dir" config user.name 'github-actions[bot]'
           git -C "$publish_dir" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git -C "$publish_dir" add --all
           if ! git -C "$publish_dir" diff --cached --quiet; then
-            git -C "$publish_dir" commit -m "deploy: Town from $GITHUB_SHA"
+            git -C "$publish_dir" commit -m "deploy: Town from $SOURCE_COMMIT"
             git -C "$publish_dir" push origin HEAD:gh-pages
           fi
           echo "commit=$(git -C "$publish_dir" rev-parse HEAD)" >> "$GITHUB_OUTPUT"
